@@ -6,9 +6,13 @@ from subprocess import Popen
 from math import atan2, degrees, radians
 import pyttsx3
 import threading
-import os
-import pyautogui
+from cgitb import text
+from email.mime import audio
+import speech_recognition as sr
+import pyttsx3
+import datetime
 
+recognize=sr.Recognizer()
 
 #testing git
 #testing vcGIT
@@ -35,22 +39,80 @@ stepsCrossed = 0
 angleThresh = 20
 say=False
 command='Let\'s Start'
+letterChoiceV='A'
+fontsizeV = 1
 
 
 def voiceGuide():
     global say
     global command
     while(1):
+        # print("rrr")
         if(say==True):
-            print('Saying')
+            print('Saying....')
             # Initialize the engine
             engine = pyttsx3.init()
             voices = engine.getProperty('voices')
             # voiceFemales = filter(lambda v: v.gender == 'VoiceGenderFemale', voices)
-            engine.setProperty('voice', voices[1].id)
+            engine.setProperty('voice', voices[0].id)
             engine.say(command)
             engine.runAndWait()
             say=False
+
+# sr.UnknownValueError():
+
+def getAudio():
+    global letterChoiceV
+    global fontsizeV
+    while True:
+        # print("wasif")
+        try:
+            with sr.Microphone() as mic:
+                print("entered!!")
+                recognize.adjust_for_ambient_noise(mic,duration=0.1)
+                audio=recognize.listen(mic)
+
+                text=recognize.recognize_google(audio)
+                text=text.lower()
+                
+                print(f"Recognized the Speech : {text}")
+
+                if text == "go to create":
+                    gotoCreate()
+                elif text == "go to test":
+                    gotoTest()
+                elif text == "go to practice":
+                    gotoPractice()
+                elif text == "clear screen":
+                    clearCanvas()
+                else:
+                    if text.find('write') != -1 or text.find('letter') != -1 or text.find('capital') != -1 or text.find('small') != -1:
+                        if text.find('letter') != -1:
+                            if text.find('capital') != -1:
+                                strv = text.split()
+                                str = strv[-1]
+                                str = "cap"+str.upper()
+                                letterChoiceV = str
+                                getDataV()
+                            else:
+                                strv = text.split()
+                                str = strv[-1]
+                                letterChoiceV = str
+                                getDataV()
+
+                    elif text.find('font') != -1 or text.find('size') != -1 or text.find('set') != -1 :
+                        strv = text.split()
+                        str = strv[-1]
+                        fontsizeV = 0
+                        if (str == "zero"):
+                            fontsizeV = 0
+                        else:
+                            fontsizeV = int(str)
+                        
+                        getSizeV()
+
+        except :
+            continue
 
 def gotoPractice():
     print("yo wassup")
@@ -147,7 +209,30 @@ def getSize(event):
         CurrentSizeD = newSizeD
         makeDataset()
 
+def getDataV():
+    global letterChoiceV
+    global currentLetter
+    
+    
+    newLetter = letterChoiceV
+    if newLetter != currentLetter:
+        currentLetter = newLetter
+        makeDataset()
+        
+def getSizeV():
+    global dataset
+    global fontsizeV
+    global CurrentSizeD
+    data = fontsizeV
+    divisors = [4,2,(4/3),1,0.8,(2/3),(4/7)]
+    newSizeD = divisors[data]
+        
+    if newSizeD != CurrentSizeD:
+        CurrentSizeD = newSizeD
+        makeDataset()
+
             
+
         
 def clearCanvas():
     makeDataset()
@@ -314,9 +399,19 @@ def paint(event):
 
 t1= threading.Thread(target=voiceGuide, name='t1')
 t1.start()
+
+t2= threading.Thread(target=getAudio, name='t2')
+t2.start()
     
 background=Canvas(root, width=970, height=700, bg='#eeeeee')
 wn=Canvas(root, width=850, height=700, bg='white')
+
+
+
+
+
+
+
 
 background.create_window(60,  50,window=Button(root,text='Practice', command=gotoPractice, bg='#eeeeee', fg='black', font=('helvetica', 15, 'bold')))
 background.create_window(60, 190,window=Button(root,text='Test', command=gotoTest, bg='brown', fg='white', font=('helvetica', 15, 'bold')))
@@ -347,13 +442,12 @@ label.configure(background='#eeeeee')
 label.place(x=5,y=350)
 fontsizeC = ttk.Combobox(background, width = 10, textvariable = strrng) 
 
-lines = ['25%','50%','75%','100%','125%','150%','175%']
+lines = ['0(25%)','1(50%)','2(75%)','3(100%)','4(125%)','5(150%)','6(175%)']
 fontsizeC['values'] = lines
     
 fontsizeC.bind("<<ComboboxSelected>>",getSize)
 fontsizeC.current(3)
 fontsizeC.place(x=5, y=375)
-
 
 wn.place(x=120, y=0)
 wn.bind('<B1-Motion>', paint)
