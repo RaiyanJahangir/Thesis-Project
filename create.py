@@ -18,6 +18,7 @@ import cv2
 import matplotlib.pyplot as plt
 import imutils 
 import random
+import os
 from tqdm import tqdm
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
@@ -81,6 +82,7 @@ def crop_contour(image, plot=False):
 
 def gotoPractice():
     Popen(['python', 'practice.py'])
+    # execfile('file.py')
     root.withdraw()
     
 
