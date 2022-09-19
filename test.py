@@ -45,23 +45,23 @@ IMAGE_SHAPE = (224, 224)
 layer = hub.KerasLayer(model_url, input_shape=IMAGE_SHAPE+(3,)) # Loading model weights
 model = tf.keras.Sequential([layer]) # Building model object using loaded weights
 
-currentLetter='A'
-dotSize = 2
-threshold = 20 
-letterri = []
-index = 0
+test_currentLetter='A'
+test_dotSize = 2
+test_threshold = 20 
+test_letterri = []
+test_index = 0
 root = Tk()
 root.title("Test")
-root.geometry("970x700")
+root.geometry("1000x1000")
 
 
-def crop_contour(image, plot=False):
+def test_crop_contour(image, plot=False):
     intact=image
     # Convert the image to grayscale, and blur it slightly
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    #gray = cv2.GaussianBlur(gray, (5, 5), 0)
+    gray = cv2.GaussianBlur(gray, (5, 5), 0)
     gray = cv2.medianBlur(gray,5)
-    #thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
+    thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
     thresh = cv2.threshold(gray, 46, 255, cv2.THRESH_BINARY)[1]
     thresh = cv2.erode(thresh, None, iterations=2)
     thresh = cv2.dilate(thresh, None, iterations=2)
@@ -95,19 +95,19 @@ def gotoCreate():
     Popen(['python', 'create.py'])
     root.withdraw() 
 
-def getData(event):
-    global currentLetter
-    newLetter = letterChoice.get()
-    if newLetter != currentLetter:
-        currentLetter = newLetter
+def test_getData(event):
+    global test_currentLetter
+    test_newLetter = letterChoice.get()
+    if test_newLetter != test_currentLetter:
+        test_currentLetter = test_newLetter
         wn.delete('all')
-        print(currentLetter)
+        print(test_currentLetter)
 
         
 def clearCanvas():
     wn.delete('paint')
     
-def evaluate():
+def test_evaluate():
     print("coming soon!!!")
     x, y = background.winfo_rootx()+122, background.winfo_rooty()
     w, h = background.winfo_width()-122, background.winfo_height()
@@ -116,11 +116,11 @@ def evaluate():
     inverted_image = PIL.ImageOps.invert(image)
     inverted_image.save('screenshot.jpg')
 
-    ex_crop_img = crop_contour( cv2.imread('screenshot.jpg'), True)
+    ex_crop_img = test_crop_contour( cv2.imread('screenshot.jpg'), True)
     cv2.imwrite('screenshot.jpg',ex_crop_img)
     
     img_1='screenshot.jpg'
-    img_2='images/'+currentLetter+'.jpg'
+    img_2='images/'+test_currentLetter+'.jpg'
 
     # Calculations for image 1
     img_1 = Image.open(img_1).convert('L').resize(IMAGE_SHAPE) # Resizing the image to required size
@@ -171,8 +171,8 @@ def paint(event):
     wn.create_oval(x1, y1, x2, y2, fill=color, outline=color,tags='paint')
 
     
-background=Canvas(root, width=970, height=700, bg='#eeeeee')
-wn=Canvas(root, width=850, height=700, bg='white')
+background=Canvas(root, width=2000, height=2000, bg='#eeeeee')
+wn=Canvas(root, width=2000, height=2000, bg='white')
 
 background.create_window(60,  50,window=Button(root,text='Practice', command=gotoPractice, bg='brown', fg='white', font=('helvetica', 15, 'bold')))
 background.create_window(60, 190,window=Button(root,text='Test', command=gotoTest, bg='#eeeeee', fg='black', font=('helvetica', 15, 'bold')))
@@ -192,15 +192,16 @@ with open(r'letters/letterlist.txt') as f:
         lines.append(row.rstrip('\n'))
 letterChoice['values'] = lines
     
-letterChoice.bind("<<ComboboxSelected>>",getData)
+letterChoice.bind("<<ComboboxSelected>>",test_getData)
 letterChoice.current(0)
 letterChoice.place(x=5, y=330)
 wn.bind('<B1-Motion>', paint)
 wn.place(x=120, y=0)
-background.create_window(60, 400,window=Button(root,text='Evaluate', command=evaluate, bg='brown', fg='white', font=('helvetica', 15, 'bold')))
+background.create_window(60, 400,window=Button(root,text='Evaluate', command=test_evaluate, bg='brown', fg='white', font=('helvetica', 15, 'bold')))
+background.create_window(60, 460,window=Button(root,text='Exit', command=root.destroy, bg='brown', fg='white', font=('helvetica', 15, 'bold')))
 
 background.pack()
 
 
-
+root.attributes('-fullscreen', True)
 root.mainloop()
