@@ -44,7 +44,7 @@ letterri = []
 index = 0
 root = Tk()
 root.title("Create")
-root.geometry("970x700")
+root.geometry("1000x1000")
 letter = []
 making = ""
 maxX = -1
@@ -53,12 +53,12 @@ minX = 10000
 minY = 10000
 
 def crop_contour(image, plot=False):
-    intact=image
+    
     # Convert the image to grayscale, and blur it slightly
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    #gray = cv2.GaussianBlur(gray, (5, 5), 0)
+    gray = cv2.GaussianBlur(gray, (5, 5), 0)
     gray = cv2.medianBlur(gray,5)
-    #thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
+    thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
     thresh = cv2.threshold(gray, 46, 255, cv2.THRESH_BINARY)[1]
     thresh = cv2.erode(thresh, None, iterations=2)
     thresh = cv2.dilate(thresh, None, iterations=2)
@@ -224,9 +224,10 @@ def paint(event):
     letter.append([x1,y1])
     
 
+
     
-background=Canvas(root, width=970, height=700, bg='#eeeeee')
-wn=Canvas(root, width=850, height=700, bg='white')
+background=Canvas(root, width=2000, height=2000, bg='#eeeeee')
+wn=Canvas(root, width=2000, height=2000, bg='white')
 # for j in range(150,550,100):
 #     gcl = 'blue'
 #     if j == 150 or j==450:
@@ -238,7 +239,7 @@ background.create_window(60,  50,window=Button(root,text='Practice', command=got
 background.create_window(60, 190,window=Button(root,text='Test', command=gotoTest, bg='brown', fg='white', font=('helvetica', 15, 'bold')))
 background.create_window(60, 120,window=Button(root,text='Create', command=gotoCreate, bg='#eeeeee', fg='black', font=('helvetica', 15, 'bold')))
 background.create_window(60, 260,window=Button(root,text='clear', command=clearCanvas, bg='brown', fg='white', font=('helvetica', 15, 'bold')))
-label = Label(background, text = "Select the Letter :", font = ("Times New Roman", 9))
+label = Label(background, text = "Select the Letter :", font = ("Times New Roman", 12))
 label.configure(background='#eeeeee')
 label.place(x=5,y=290)
 txtfld=Entry(background,width = 10)
@@ -248,9 +249,11 @@ button  = ttk.Button(root,text='ok', command=getLetter, padding=0, width=2,)
 background.create_window(85, 332,window=button)
 
 background.create_window(60, 380,window=Button(root,text='Save', command=saveLetter, bg='brown', fg='white', font=('helvetica', 15, 'bold')))
+background.create_window(60, 450,window=Button(root,text='Exit', command=root.destroy, bg='brown', fg='white', font=('helvetica', 15, 'bold')))
+
 wn.bind('<B1-Motion>', paint)
 wn.place(x=120, y=0)
 background.pack()
 
-
+root.attributes('-fullscreen', True)
 root.mainloop()

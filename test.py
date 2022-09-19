@@ -52,16 +52,16 @@ letterri = []
 index = 0
 root = Tk()
 root.title("Test")
-root.geometry("970x700")
+root.geometry("1000x1000")
 
 
 def crop_contour(image, plot=False):
     intact=image
     # Convert the image to grayscale, and blur it slightly
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    #gray = cv2.GaussianBlur(gray, (5, 5), 0)
+    gray = cv2.GaussianBlur(gray, (5, 5), 0)
     gray = cv2.medianBlur(gray,5)
-    #thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
+    thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
     thresh = cv2.threshold(gray, 46, 255, cv2.THRESH_BINARY)[1]
     thresh = cv2.erode(thresh, None, iterations=2)
     thresh = cv2.dilate(thresh, None, iterations=2)
@@ -171,8 +171,8 @@ def paint(event):
     wn.create_oval(x1, y1, x2, y2, fill=color, outline=color,tags='paint')
 
     
-background=Canvas(root, width=970, height=700, bg='#eeeeee')
-wn=Canvas(root, width=850, height=700, bg='white')
+background=Canvas(root, width=2000, height=2000, bg='#eeeeee')
+wn=Canvas(root, width=2000, height=2000, bg='white')
 
 background.create_window(60,  50,window=Button(root,text='Practice', command=gotoPractice, bg='brown', fg='white', font=('helvetica', 15, 'bold')))
 background.create_window(60, 190,window=Button(root,text='Test', command=gotoTest, bg='#eeeeee', fg='black', font=('helvetica', 15, 'bold')))
@@ -198,9 +198,10 @@ letterChoice.place(x=5, y=330)
 wn.bind('<B1-Motion>', paint)
 wn.place(x=120, y=0)
 background.create_window(60, 400,window=Button(root,text='Evaluate', command=evaluate, bg='brown', fg='white', font=('helvetica', 15, 'bold')))
+background.create_window(60, 460,window=Button(root,text='Exit', command=root.destroy, bg='brown', fg='white', font=('helvetica', 15, 'bold')))
 
 background.pack()
 
 
-
+root.attributes('-fullscreen', True)
 root.mainloop()

@@ -25,7 +25,8 @@ strokeIndex = 1
 strokePointIndex = 0
 root = Tk()
 root.title("Practice")
-root.geometry("970x700")
+
+root.geometry("1000x1000")
 letter = []
 xshift = 0
 yshift = 0
@@ -403,14 +404,8 @@ t1.start()
 t2= threading.Thread(target=getAudio, name='t2')
 t2.start()
     
-background=Canvas(root, width=970, height=700, bg='#eeeeee')
-wn=Canvas(root, width=850, height=700, bg='white')
-
-
-
-
-
-
+background=Canvas(root, width=2000, height=2000, bg='#eeeeee')
+wn=Canvas(root, width=500, height=2000, bg='white')
 
 
 background.create_window(60,  50,window=Button(root,text='Practice', command=gotoPractice, bg='#eeeeee', fg='black', font=('helvetica', 15, 'bold')))
@@ -421,10 +416,10 @@ background.create_window(60, 260,window=Button(root,text='clear', command=clearC
 makeDataset()
 
 strrng = StringVar() 
-label = Label(background, text = "Select the Letter :", font = ("Times New Roman", 9))
+label = Label(background, text = "Select the Letter :", font = ("Times New Roman", 12))
 label.configure(background='#eeeeee')
 label.place(x=5,y=295)
-letterChoice = ttk.Combobox(background, width = 10, textvariable = strrng) 
+letterChoice = ttk.Combobox(background, width = 15, textvariable = strrng) 
 
 lines = []
 with open(r'letters/letterlist.txt') as f:
@@ -437,10 +432,12 @@ letterChoice.current(0)
 letterChoice.place(x=5, y=320)
 
 strrng = StringVar() 
-label = Label(background, text = "Select Font size :", font = ("Times New Roman", 10))
+label = Label(background, text = "Select Font size :", font = ("Times New Roman", 12))
 label.configure(background='#eeeeee')
 label.place(x=5,y=350)
-fontsizeC = ttk.Combobox(background, width = 10, textvariable = strrng) 
+fontsizeC = ttk.Combobox(background, width = 15, textvariable = strrng) 
+
+background.create_window(60, 430,window=Button(root,text='Exit', command=root.destroy, bg='brown', fg='white', font=('helvetica', 15, 'bold')))
 
 lines = ['0(25%)','1(50%)','2(75%)','3(100%)','4(125%)','5(150%)','6(175%)']
 fontsizeC['values'] = lines
@@ -453,6 +450,6 @@ wn.place(x=120, y=0)
 wn.bind('<B1-Motion>', paint)
 background.pack()
 
-
+# root.attributes('-fullscreen', True)
 root.mainloop()
 
