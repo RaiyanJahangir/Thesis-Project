@@ -405,7 +405,7 @@ t2= threading.Thread(target=getAudio, name='t2')
 t2.start()
     
 background=Canvas(root, width=2000, height=2000, bg='#eeeeee')
-wn=Canvas(root, width=500, height=2000, bg='white')
+wn=Canvas(root, width=2000, height=2000, bg='white')
 
 
 background.create_window(60,  50,window=Button(root,text='Practice', command=gotoPractice, bg='#eeeeee', fg='black', font=('helvetica', 15, 'bold')))
@@ -450,6 +450,6 @@ wn.place(x=120, y=0)
 wn.bind('<B1-Motion>', paint)
 background.pack()
 
-# root.attributes('-fullscreen', True)
+root.attributes('-fullscreen', True)
 root.mainloop()
 

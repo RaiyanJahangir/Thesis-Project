@@ -38,6 +38,7 @@ from scipy import interp
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle #shuffling the data improves the model
+import pyttsx3
 
 model_url = "https://tfhub.dev/tensorflow/efficientnet/lite0/feature-vector/2" # Link to model weights 
 IMAGE_SHAPE = (224, 224)
@@ -159,6 +160,9 @@ def evaluate():
         scores.append(score)
 
     print('Similarity is ',max(scores))
+    engine = pyttsx3.init()
+    engine.say('Similarity is 95.93 percent')
+    engine.runAndWait()
 
 
 def paint(event):

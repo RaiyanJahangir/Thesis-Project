@@ -239,7 +239,7 @@ background.create_window(60,  50,window=Button(root,text='Practice', command=got
 background.create_window(60, 190,window=Button(root,text='Test', command=gotoTest, bg='brown', fg='white', font=('helvetica', 15, 'bold')))
 background.create_window(60, 120,window=Button(root,text='Create', command=gotoCreate, bg='#eeeeee', fg='black', font=('helvetica', 15, 'bold')))
 background.create_window(60, 260,window=Button(root,text='clear', command=clearCanvas, bg='brown', fg='white', font=('helvetica', 15, 'bold')))
-label = Label(background, text = "Select the Letter :", font = ("Times New Roman", 12))
+label = Label(background, text = "Select the Letter :", font = ("Times New Roman", 8))
 label.configure(background='#eeeeee')
 label.place(x=5,y=290)
 txtfld=Entry(background,width = 10)
