@@ -460,7 +460,7 @@ def create_saveLetter():
     #wn.delete('guideline')
 
     x, y = background.winfo_rootx()+122, background.winfo_rooty()
-    w, h = background.winfo_width()-125, background.winfo_height()-120
+    w, h = background.winfo_width()-130, background.winfo_height()-77
     pyautogui.screenshot('images/'+create_making+'.jpg', region=(x, y, w, h))
     image = Image.open('images/'+create_making+'.jpg')
     inverted_image = PIL.ImageOps.invert(image)
@@ -526,7 +526,7 @@ def test_evaluate():
     global command,say
     print("coming soon!!!")
     x, y = background.winfo_rootx()+122, background.winfo_rooty()
-    w, h = background.winfo_width()-130, background.winfo_height()-100
+    w, h = background.winfo_width()-130, background.winfo_height()-77
     pyautogui.screenshot('screenshot.jpg', region=(x, y, w, h))
     image = Image.open('screenshot.jpg')
     inverted_image = PIL.ImageOps.invert(image)
