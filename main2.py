@@ -55,7 +55,11 @@ IMAGE_SHAPE = (224, 224)
 
 layer = hub.KerasLayer(model_url, input_shape=IMAGE_SHAPE+(3,)) # Loading model weights
 model = tf.keras.Sequential([layer]) # Building model object using loaded weights
-  
+
+
+recognize=sr.Recognizer()
+
+
 
 
 def crop_contour(image, plot=False):
@@ -114,7 +118,9 @@ def init():
     global fontsizeC
     global letterChoice
     global select_letter
-    global select_fontsize
+    global select_fontsize,test_prev_x,test_prev_y
+    test_prev_x = -1
+    test_prev_y = -1
     create_txtfld.destroy()
     fontsizeC.destroy()
     letterChoice.destroy()
@@ -174,7 +180,7 @@ def practice_makeDataset():
     global practice_index,practice_strokePointIndex,practice_strokeIndex
     global practice_started
     global practice_threshold
-    global practice_dotSize
+    global practice_dotSize,command,say
     wn.delete('all')
     practice_index = 0
     practice_strokePointIndex = 0
@@ -234,9 +240,10 @@ def practice_correctionMSGpoint(x,y,tx,ty):
     elif x1 > ovalEndx1 and y1>=ovalStarty1 and y2<ovalEndy1:
         text = "Go Left"
     
-    command=text
-    say=True
-    return "Out of Line!!! "+text
+    if(len(text) == 0):
+        text = "Out of Line"
+
+    return text
 
 
 
@@ -265,25 +272,30 @@ def practice_responseNext(x,y,tx,ty):
     elif x1 > ovalEndx1 and y1>=ovalStarty1 and y2<ovalEndy1:
         text = "Go Left"
     
-    command=text
-    say=True
-    return "keep on going!!! "+text
+    if len(text) == 0:
+        text = "keep on going"
+
+    
+    return text
 
 
 def practice_getData(event):
     global letterChoice
     global practice_currentLetter
+    global command,say
     
     
     newLetter = letterChoice.get()
     if newLetter != practice_currentLetter:
         practice_currentLetter = newLetter
         practice_makeDataset()
+        command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
+        say = True
         
 def practice_getSize(event):
     global practice_dataset
     global fontsizeC
-    global practice_CurrentSizeD
+    global practice_CurrentSizeD,command,say
     data = fontsizeC.current()
     divisors = [4,2,(4/3),1,0.8,(2/3),(4/7)]
     newSizeD = divisors[data]
@@ -291,6 +303,36 @@ def practice_getSize(event):
     if newSizeD != practice_CurrentSizeD:
         practice_CurrentSizeD = newSizeD
         practice_makeDataset()
+        command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
+        say = True
+
+
+def practice_getDataV():
+    global practice_letterChoiceV
+    global practice_currentLetter,command,say
+    
+    
+    newLetter = practice_letterChoiceV
+    if newLetter != practice_currentLetter:
+        practice_currentLetter = newLetter
+        practice_makeDataset()
+        command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
+        say = True
+        
+def practice_getSizeV():
+    global practice_dataset
+    global practice_fontsizeV
+    global practice_CurrentSizeD,command,say
+    data = practice_fontsizeV
+    divisors = [4,2,(4/3),1,0.8,(2/3),(4/7)]
+    newSizeD = divisors[data]
+        
+    if newSizeD != practice_CurrentSizeD:
+        practice_CurrentSizeD = newSizeD
+        practice_makeDataset()
+        command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
+        say = True
+
 
 
 
@@ -321,6 +363,7 @@ def create_clearCanvas():
     create_minX = 10000
     create_minY = 10000
     wn.delete('paint')
+    wn.delete('follow')
 
 def create_getLetter():
     global create_txtfld
@@ -446,22 +489,44 @@ test_dotSize = 2
 test_threshold = 20 
 test_letterri = []
 test_index = 0
+test_prev_x = -1
+test_prev_y = -1
 
 
 
 def test_getData(event):
-    global test_currentLetter
-    global letterChoice
+    global test_currentLetter,test_prev_x
+    global letterChoice,command,say,test_prev_y
     test_newLetter = letterChoice.get()
+    
     if test_newLetter != test_currentLetter:
         test_currentLetter = test_newLetter
         wn.delete('all')
         print(test_currentLetter)
+        command = "letter chosen "+str(test_currentLetter)
+        say = True
+        test_prev_x = -1
+        test_prev_y = -1
+
+def test_getDataV(test_newLetter):
+    global test_currentLetter,command,say
+    global test_prev_x 
+    global test_prev_y 
+    if test_newLetter != test_currentLetter:
+        test_currentLetter = test_newLetter
+        wn.delete('all')
+        print(test_currentLetter)
+        command = "letter chosen "+str(test_currentLetter)
+        say = True
+        test_prev_x = -1
+        test_prev_y = -1
+
 
 def test_evaluate():
+    global command,say
     print("coming soon!!!")
     x, y = background.winfo_rootx()+122, background.winfo_rooty()
-    w, h = background.winfo_width()-122, background.winfo_height()
+    w, h = background.winfo_width()-130, background.winfo_height()-100
     pyautogui.screenshot('screenshot.jpg', region=(x, y, w, h))
     image = Image.open('screenshot.jpg')
     inverted_image = PIL.ImageOps.invert(image)
@@ -510,6 +575,19 @@ def test_evaluate():
         scores.append(score)
 
     print('Similarity is ',max(scores))
+
+
+    text = 'Similarity is '+str(max(scores))
+    command=text
+    say=True
+
+def test_slope(x,px,y,py):
+    return (y-py)/(x-px)
+
+def test_getY(x,px,y,py,x2):
+    m = test_slope(x,px,y,py)
+    y = py+m*(x2-px)
+
 
 
 
@@ -564,23 +642,33 @@ def paintP(event):
         for point in practice_letter:
             xc = point[0]+practice_initX
             yc = point[1]+practice_initY
-            if xc>820 :
+            if xc>screen_width-130:
                 print("too much on right side, go left")
+                command = "too much on right side, go left"
+                say = True
                 practice_makeDataset()
                 break
             if xc<10 :
                 print("too much on left side, go right")
+                command = "too much on left side, go right"
+                say = True
                 practice_makeDataset()
                 break
             if yc<10 :
                 print("too much on upperside, go down")
+                command = "too much on upperside, go down"
+                say = True
                 practice_makeDataset()
                 break
-            if yc>690 :
+            if yc>screen_height-10 :
                 print("too much on bottom side, go up")
+                command = "too much on bottom side, go up"
+                say = True
                 practice_makeDataset()
                 break
-    
+            
+        
+
     targetX = practice_dataset[0][practice_index][0]+practice_initX
     targetY = practice_dataset[0][practice_index][1]+practice_initY
     angleNeed = 0
@@ -608,13 +696,20 @@ def paintP(event):
             pretY = practice_dataset[0][practice_index-1][1]+practice_initY
             
         if not(x>=pretX-practice_threshold and x<= pretX+practice_threshold and y>=pretY-practice_threshold and y<= pretY+practice_threshold):
-            print(practice_correctionMSGpoint(x,y,pretX,pretY))
+            text = practice_correctionMSGpoint(x,y,pretX,pretY)
+            print(text)
+            command=text
+            say=True
             draw_point = False
     
     
     if draw_point:
         wn.create_oval(x1, y1, x2, y2, fill=color, outline=color,tags='paint')
-        print(practice_responseNext(x,y,targetX,targetY))
+        text = practice_responseNext(x,y,targetX,targetY)
+        print(text)
+        command=text
+        say=True
+
         
 
 
@@ -636,15 +731,25 @@ def paintC(event):
     create_letter.append([x1,y1])
 
 def paintT(event):
-    
+    global test_prev_y,test_prev_x
     # get x1, y1, x2, y2 co-ordinates
     x1, y1 = (event.x-5), (event.y-5)
     x2, y2 = (event.x+5), (event.y+5)
-    color = "green"
+    color = "black"
     # display the mouse movement inside canvas
-    wn.create_oval(x1, y1, x2, y2, fill=color, outline=color,tags='paint')
-
-
+    if test_prev_x != -1 and 0 == 1:
+        
+        for inc in np.arange(test_prev_x, event.x, 0.1):
+            xx = event.x+inc
+            yy = test_getY(float(event.x),float(test_prev_x),float(event.y),float(test_getY),float(xx))
+            x1, y1 = (xx-5), (yy-5)
+            x2, y2 = (xx+5), (yy+5)
+            wn.create_oval(x1, y1, x2, y2, fill=color, outline=color,tags='paint')
+    else:
+        wn.create_oval(x1, y1, x2, y2, fill=color, outline=color,tags='paint')        
+    
+    test_prev_x = event.x
+    test_prev_y = event.y
 
 
 
@@ -660,21 +765,27 @@ background=Canvas(root, width=screen_width, height=screen_height, bg='#eeeeee')
 def gotoHome():
     global session
     global background
-    global create_txtfld
+    global create_txtfld,command,say
     session = 'Home'
     init()
+    command = 'Home ready'
+    say = True
+    wn.delete('paint')
     home_btn['background'] = 'white'
     home_btn['foreground'] = 'black'
 
 
 def gotoPractice():
-    global session
+    global session,command,say
     global letterChoice
     global fontsizeC
     global select_letter
     global select_fontsize
     strrng = StringVar() 
     init()
+    practice_makeDataset()
+    command = 'Practice ready'
+    say = True
     practice_btn['background'] = 'white'
     practice_btn['foreground'] = 'black'
     select_letter = Label(background, text = "Select Letter :", font = ("Times New Roman", 12))
@@ -710,11 +821,15 @@ def gotoPractice():
 
 
 def gotoTest():
-    global session
+    global session,command,say
     global letterChoice
-    global select_letter
+    global select_letter,test_prev_x,test_prev_y
     session = 'Test'
+    
     init()
+    wn.delete('paint')
+    command = 'Test ready'
+    say = True
     test_btn['background'] = 'white'
     test_btn['foreground'] = 'black'
     select_letter = Label(background, text = "Select Letter :", font = ("Times New Roman", 12))
@@ -735,12 +850,16 @@ def gotoTest():
     background.create_window(60, 450,window=Button(root,text='Evaluate', command=test_evaluate, bg='brown', fg='white', font=('helvetica', 12, 'bold')),tags = 'test_button_evaluate')
 
 def gotoCreate():
-    global select_letter
+    global select_letter,command,say
     global create_txtfld
     global session
     global background
     session = 'Create'
+
     init()
+    create_clearCanvas()
+    command = 'create ready'
+    say = True
     create_btn['background'] = 'white'
     create_btn['foreground'] = 'black'
     select_letter = Label(background, text = "Select Letter :", font = ("Times New Roman", 12))
@@ -753,23 +872,150 @@ def gotoCreate():
 
 
 def clear():
-    global wn
+    global wn,command,say
     if session == 'Home':
-        pass
+        wn.delete('paint')
     elif session == 'Practice':
         practice_makeDataset()
     elif session == 'Create':
         create_clearCanvas()
     elif session == 'Test':
         wn.delete('paint')
-    pass
+    command='screen cleared'
+    say=True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# voiceGuide _____________________________________________
+
+def voiceGuide():
+    global say
+    global command
+    while(1):
+        # print("rrr")
+        if(say==True):
+            print('Saying....')
+            # Initialize the engine
+            engine = pyttsx3.init()
+            voices = engine.getProperty('voices')
+            # voiceFemales = filter(lambda v: v.gender == 'VoiceGenderFemale', voices)
+            engine.setProperty('voice', voices[0].id)
+            engine.say(command)
+            engine.runAndWait()
+            say=False
+
+
+
+
+
+
+
+# Speech Detection __________________________________________________________
+
+def getAudio():
+    global practice_letterChoiceV
+    global practice_fontsizeV
+    while True:
+        # print("wasif")
+        try:
+            with sr.Microphone() as mic:
+                print("entered!!")
+                recognize.adjust_for_ambient_noise(mic,duration=0.1)
+                audio=recognize.listen(mic)
+
+                text=recognize.recognize_google(audio)
+                text=text.lower()
+                
+                print(f"Recognized the Speech : {text}")
+
+                if text == "go to home":
+                    gotoHome()
+                elif text == "go to create":
+                    gotoCreate()
+                elif text == "go to test":
+                    gotoTest()
+                elif text == "go to practice":
+                    gotoPractice()
+                elif text == "clear screen":
+                    clear()
+                elif session == 'Test' and text == "evaluate":
+                    test_evaluate()
+                else:
+                    if session != 'Home' and session != 'Create' and (text.find('write') != -1 or text.find('letter') != -1 or text.find('capital') != -1 or text.find('small') != -1):
+                        if text.find('letter') != -1:
+                            if text.find('capital') != -1:
+                                strv = text.split()
+                                str = strv[-1]
+                                str = "cap"+str.upper()
+                                practice_letterChoiceV = str
+                                test_newLetter = str
+                                if session == 'Practice':
+                                    practice_getDataV()
+                                else:
+                                    test_getDataV(test_newLetter)
+                                
+                            else:
+                                strv = text.split()
+                                str = strv[-1]
+                                practice_letterChoiceV = str
+                                test_newLetter = str
+                                if session == 'Practice':
+                                    practice_getDataV()
+                                else:
+                                    test_getDataV(test_newLetter)
+
+
+                    elif session == 'Practice' and (text.find('font') != -1 or text.find('size') != -1 or text.find('set') != -1) :
+                        strv = text.split()
+                        str = strv[-1]
+                        practice_fontsizeV = 0
+                        if (str == "zero"):
+                            practice_fontsizeV = 0
+                        else:
+                            practice_fontsizeV = int(str)
+                        
+                        practice_getSizeV()
+
+        except :
+            continue
+
+
+
+
+t1= threading.Thread(target=voiceGuide, name='t1')
+t1.start()
+
+t2= threading.Thread(target=getAudio, name='t2')
+t2.start()
+
+
+
+
+
+
+
+
+
 
 
 home_btn = Button(root,text='Home', command=gotoHome, bg='white', fg='black', font=('helvetica', 12, 'bold'))
 practice_btn = Button(root,text='Practice', command=gotoPractice, bg='Brown', fg='white', font=('helvetica', 12, 'bold'))
 test_btn = Button(root,text='Test', command=gotoTest, bg='brown', fg='white', font=('helvetica', 12, 'bold'))
 create_btn = Button(root,text='Create', command=gotoCreate, bg='brown', fg='white', font=('helvetica', 12, 'bold'))
-clear_btn = Button(root,text='clear', command=None, bg='brown', fg='white', font=('helvetica', 12, 'bold'))
+clear_btn = Button(root,text='clear', command=clear, bg='brown', fg='white', font=('helvetica', 12, 'bold'))
 
 background.create_window(60,  50,height = 40,width = 100,window=home_btn)
 background.create_window(60, 120,height = 40,width = 100,window=practice_btn)
@@ -788,5 +1034,6 @@ wn.place(x=120, y=0)
 background.pack()
 
 root.mainloop()
+
 
 
