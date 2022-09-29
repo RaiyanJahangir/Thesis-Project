@@ -97,6 +97,7 @@ index = 0
 strokeIndex = 1
 strokePointIndex = 0
 root = Tk()
+rootDestroyed = False
 root.title("Home")
 fontsizeC = ttk.Combobox()
 letterChoice = ttk.Combobox()
@@ -217,31 +218,32 @@ def practice_makeDataset():
 
 def practice_correctionMSGpoint(x,y,tx,ty):
     x1,y1,ovalStartx1,ovalStarty1 = x,y,tx,ty
-    x2=x1+practice_threshold
-    y2=y1+practice_threshold
     ovalEndx1,ovalEndy1 = tx,ty
+    x2=x1+practice_threshold+5
+    y2=y1+practice_threshold+5
+    # print(" x1 = ",x1," y1 = ",y1," x2 = ",x2," y2 = ",y2," tx = ",tx," ty = ",ty)
     text = ""
     global command
     global say
-    if x1 < ovalStartx1 and y1 < ovalStarty1:
+    if x2 < tx and y2 < ty:
         text = "Go Down Right"
-    elif x1 > ovalEndx1 and y1 < ovalStarty1:
+    elif x1 > tx and y2 < ty:
         text = "Go Down Left"
-    elif x1 < ovalStartx1 and y1 > ovalEndy1:
+    elif x2 < tx and y1 > ty:
         text = "Go Up Right"
-    elif x1 > ovalEndx1 and y1 > ovalEndy1:
+    elif x1 > tx and y1 > ty:
         text = "Go Up Left"
-    elif y1 < ovalStarty1 and x1>=ovalStartx1 and x2<ovalEndx1:
+    elif y2 < ty and x1<=tx and x2>tx:
         text = "Go Down"
-    elif y1 > ovalEndy1 and x1>=ovalStartx1 and x2<ovalEndx1:
+    elif y1 > ty and x1<=tx and x2>tx:
         text = "Go Up"
-    elif x1 < ovalStartx1 and y1>=ovalStarty1 and y2<ovalEndy1:
+    elif x2 < tx and y1<=ty and y2>ty:
         text = "Go Right"
-    elif x1 > ovalEndx1 and y1>=ovalStarty1 and y2<ovalEndy1:
+    elif x1 > tx and y1<=ty and y2>ty:
         text = "Go Left"
     
-    if(len(text) == 0):
-        text = "Out of Line"
+    if len(text) == 0:
+        text = "keep on going"
 
     return text
 
@@ -252,31 +254,32 @@ def practice_responseNext(x,y,tx,ty):
     ovalEndx1,ovalEndy1 = tx,ty
     x2=x1+practice_threshold
     y2=y1+practice_threshold
+    # print(" x1 = ",x1," y1 = ",y1," x2 = ",x2," y2 = ",y2," tx = ",tx," ty = ",ty)
     text = ""
     global command
     global say
-    if x1 < ovalStartx1 and y1 < ovalStarty1:
+    if x2 < tx and y2 < ty:
         text = "Go Down Right"
-    elif x1 > ovalEndx1 and y1 < ovalStarty1:
+    elif x1 > tx and y2 < ty:
         text = "Go Down Left"
-    elif x1 < ovalStartx1 and y1 > ovalEndy1:
+    elif x2 < tx and y1 > ty:
         text = "Go Up Right"
-    elif x1 > ovalEndx1 and y1 > ovalEndy1:
+    elif x1 > tx and y1 > ty:
         text = "Go Up Left"
-    elif y1 < ovalStarty1 and x1>=ovalStartx1 and x2<ovalEndx1:
+    elif y2 < ty and x1<=tx and x2>tx:
         text = "Go Down"
-    elif y1 > ovalEndy1 and x1>=ovalStartx1 and x2<ovalEndx1:
+    elif y1 > ty and x1<=tx and x2>tx:
         text = "Go Up"
-    elif x1 < ovalStartx1 and y1>=ovalStarty1 and y2<ovalEndy1:
+    elif x2 < tx and y1<=ty and y2>ty:
         text = "Go Right"
-    elif x1 > ovalEndx1 and y1>=ovalStarty1 and y2<ovalEndy1:
+    elif x1 > tx and y1<=ty and y2>ty:
         text = "Go Left"
     
     if len(text) == 0:
         text = "keep on going"
 
-    
     return text
+
 
 
 def practice_getData(event):
@@ -291,6 +294,8 @@ def practice_getData(event):
         practice_makeDataset()
         command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
         say = True
+        t1= threading.Thread(target=voiceGuide, name='t1')
+        t1.start()
         
 def practice_getSize(event):
     global practice_dataset
@@ -305,6 +310,8 @@ def practice_getSize(event):
         practice_makeDataset()
         command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
         say = True
+        t1= threading.Thread(target=voiceGuide, name='t1')
+        t1.start()
 
 
 def practice_getDataV():
@@ -318,6 +325,8 @@ def practice_getDataV():
         practice_makeDataset()
         command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
         say = True
+        t1= threading.Thread(target=voiceGuide, name='t1')
+        t1.start()
         
 def practice_getSizeV():
     global practice_dataset
@@ -332,6 +341,8 @@ def practice_getSizeV():
         practice_makeDataset()
         command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
         say = True
+        t1= threading.Thread(target=voiceGuide, name='t1')
+        t1.start()
 
 
 
@@ -383,7 +394,7 @@ def create_getLetter():
 
 def create_saveLetter():
     global create_maxX,create_maxY,create_minX,create_minY
-    global create_letter
+    global create_letter,stc
     if len(create_letter) == 0:
         return 
     # if create_minY < 120 or create_maxY > 480:
@@ -415,7 +426,7 @@ def create_saveLetter():
         for i in range(0,len(letters),1):
             x = letters[i][0]
             y = letters[i][1]
-            if math.sqrt((preX-x)*(preX-x)+(preY-y)*(preY-y)) < 25:
+            if math.sqrt((preX-x)*(preX-x)+(preY-y)*(preY-y)) < 25 and stc:
                 continue
             preX = x
             preY = y
@@ -505,6 +516,8 @@ def test_getData(event):
         print(test_currentLetter)
         command = "letter chosen "+str(test_currentLetter)
         say = True
+        t1= threading.Thread(target=voiceGuide, name='t1')
+        t1.start()
         test_prev_x = -1
         test_prev_y = -1
 
@@ -518,12 +531,15 @@ def test_getDataV(test_newLetter):
         print(test_currentLetter)
         command = "letter chosen "+str(test_currentLetter)
         say = True
+        t1= threading.Thread(target=voiceGuide, name='t1')
+        t1.start()
         test_prev_x = -1
         test_prev_y = -1
 
 
 def test_evaluate():
-    global command,say
+    global command,say,test_currentLetter
+
     print("coming soon!!!")
     x, y = background.winfo_rootx()+122, background.winfo_rooty()
     w, h = background.winfo_width()-130, background.winfo_height()-77
@@ -531,6 +547,7 @@ def test_evaluate():
     image = Image.open('screenshot.jpg')
     inverted_image = PIL.ImageOps.invert(image)
     inverted_image.save('screenshot.jpg')
+
 
     ex_crop_img = crop_contour( cv2.imread('screenshot.jpg'), True)
     cv2.imwrite('screenshot.jpg',ex_crop_img)
@@ -540,6 +557,7 @@ def test_evaluate():
 
     # Calculations for image 1
     img_1 = Image.open(img_1).convert('L').resize(IMAGE_SHAPE) # Resizing the image to required size
+    # img_1.save('img_1.jpg')
     img_1 = np.stack((img_1,)*3, axis=-1) # Converting the image into a color representation for each pixel
     img_1 = np.array(img_1)/255.0 # Normalizing the values between 0 and 1
     embedding_img1 = model.predict(img_1[np.newaxis, ...]) # Extracting the features
@@ -548,6 +566,7 @@ def test_evaluate():
 
     # Calculations for image 2
     img_2 = Image.open(img_2).convert('L').resize(IMAGE_SHAPE) # Resizing the image to required size
+    # img_2.save('img_2.jpg')
     img_2 = np.stack((img_2,)*3, axis=-1) # Converting the image into a color representation for each pixel
     img_2 = np.array(img_2)/255.0 # Normalizing the values between 0 and 1
     embedding_img2 = model.predict(img_2[np.newaxis, ...]) # Extracting the features
@@ -580,6 +599,8 @@ def test_evaluate():
     text = 'Similarity is '+str(max(scores))
     command=text
     say=True
+    t1= threading.Thread(target=voiceGuide, name='t1')
+    t1.start()
 
 def test_slope(x,px,y,py):
     return (y-py)/(x-px)
@@ -624,6 +645,8 @@ def paintP(event):
     if practice_index == len(practice_letter):
         command='Done'
         say=True
+        t1= threading.Thread(target=voiceGuide, name='t1')
+        t1.start()
         print("Done!!!")
         return 
     
@@ -647,24 +670,32 @@ def paintP(event):
                 print("too much on right side, go left")
                 command = "too much on right side, go left"
                 say = True
+                t1= threading.Thread(target=voiceGuide, name='t1')
+                t1.start()
                 practice_makeDataset()
                 break
             if xc<10 :
                 print("too much on left side, go right")
                 command = "too much on left side, go right"
                 say = True
+                t1= threading.Thread(target=voiceGuide, name='t1')
+                t1.start()
                 practice_makeDataset()
                 break
             if yc<10 :
                 print("too much on upperside, go down")
                 command = "too much on upperside, go down"
                 say = True
+                t1= threading.Thread(target=voiceGuide, name='t1')
+                t1.start()
                 practice_makeDataset()
                 break
             if yc>screen_height-10 :
                 print("too much on bottom side, go up")
                 command = "too much on bottom side, go up"
                 say = True
+                t1= threading.Thread(target=voiceGuide, name='t1')
+                t1.start()
                 practice_makeDataset()
                 break
             
@@ -701,6 +732,8 @@ def paintP(event):
             print(text)
             command=text
             say=True
+            t1= threading.Thread(target=voiceGuide, name='t1')
+            t1.start()
             draw_point = False
     
     
@@ -710,6 +743,9 @@ def paintP(event):
         print(text)
         command=text
         say=True
+        t1= threading.Thread(target=voiceGuide, name='t1')
+        t1.start()
+        
 
         
 
@@ -732,34 +768,15 @@ def paintC(event):
     create_letter.append([x1,y1])
 
 def paintT(event):
-    global test_prev_y,test_prev_x
     # get x1, y1, x2, y2 co-ordinates
     x1, y1 = (event.x-5), (event.y-5)
     x2, y2 = (event.x+5), (event.y+5)
     color = "black"
     # display the mouse movement inside canvas
-    if test_prev_x != -1 and False:
-        
-        for inc in np.arange(test_prev_x, event.x, 1):
-            
-            xx = event.x+inc
-            
-            # yy = test_getY(float(event.x),float(test_prev_x),float(event.y),float(test_getY),float(xx))
-            
-            xxx = event.x
-            yyy = event.y
-            yy = test_getY(xxx,(test_prev_x),yyy,(test_prev_y),(xx))
-            
-            x1, y1 = (xx-5), (yy-5)
-            x2, y2 = (xx+5), (yy+5)
-            
-            wn.create_oval(x1, y1, x2, y2, fill=color, outline=color,tags='paint')
-    else:
-        wn.create_oval(x1, y1, x2, y2, fill=color, outline=color,tags='paint')        
     
-    test_prev_x = event.x
-    test_prev_y = event.y
-
+    wn.create_oval(x1, y1, x2, y2, fill=color, outline=color,tags='paint')        
+    
+    
 
 
 
@@ -779,7 +796,10 @@ def gotoHome():
     init()
     command = 'Home ready'
     say = True
+    t1= threading.Thread(target=voiceGuide, name='t1')
+    t1.start()
     wn.delete('paint')
+    wn.delete('follow')
     home_btn['background'] = 'white'
     home_btn['foreground'] = 'black'
 
@@ -795,6 +815,8 @@ def gotoPractice():
     practice_makeDataset()
     command = 'Practice ready'
     say = True
+    t1= threading.Thread(target=voiceGuide, name='t1')
+    t1.start()
     practice_btn['background'] = 'white'
     practice_btn['foreground'] = 'black'
     select_letter = Label(background, text = "Select Letter :", font = ("Times New Roman", 12))
@@ -837,8 +859,11 @@ def gotoTest():
     
     init()
     wn.delete('paint')
+    wn.delete('follow')
     command = 'Test ready'
     say = True
+    t1= threading.Thread(target=voiceGuide, name='t1')
+    t1.start()
     test_btn['background'] = 'white'
     test_btn['foreground'] = 'black'
     select_letter = Label(background, text = "Select Letter :", font = ("Times New Roman", 12))
@@ -852,7 +877,7 @@ def gotoTest():
             lines.append(row.rstrip('\n'))
     letterChoice['values'] = lines
         
-    letterChoice.bind("<<ComboboxSelected>>",practice_getData)
+    letterChoice.bind("<<ComboboxSelected>>",test_getData)
     letterChoice.current(0)
     letterChoice.place(x=5, y=385)
     
@@ -869,6 +894,8 @@ def gotoCreate():
     create_clearCanvas()
     command = 'create ready'
     say = True
+    t1= threading.Thread(target=voiceGuide, name='t1')
+    t1.start()
     create_btn['background'] = 'white'
     create_btn['foreground'] = 'black'
     select_letter = Label(background, text = "Select Letter :", font = ("Times New Roman", 12))
@@ -884,14 +911,18 @@ def clear():
     global wn,command,say
     if session == 'Home':
         wn.delete('paint')
+        wn.delete('follow')
     elif session == 'Practice':
         practice_makeDataset()
     elif session == 'Create':
         create_clearCanvas()
     elif session == 'Test':
         wn.delete('paint')
+        wn.delete('follow')
     command='screen cleared'
     say=True
+    t1= threading.Thread(target=voiceGuide, name='t1')
+    t1.start()
 
 
 
@@ -913,8 +944,9 @@ def clear():
 def voiceGuide():
     global say
     global command
-    while(1 ):
-        # print("rrr")
+    lim = 1
+    print("Wasif inside voiceGuide")
+    try:
         if(say==True):
             print('Saying....')
             # Initialize the engine
@@ -925,6 +957,12 @@ def voiceGuide():
             engine.say(command)
             engine.runAndWait()
             say=False
+    except:
+        say=False
+        return 
+
+    print("voice end")   
+    print('number of current threads is ', threading.active_count())
 
 
 
@@ -937,8 +975,8 @@ def voiceGuide():
 def getAudio():
     global practice_letterChoiceV
     global practice_fontsizeV
-    while True:
-        # print("wasif")
+    while rootDestroyed == False:
+        print("wasif inside audio")
         try:
             with sr.Microphone() as mic:
                 print("entered!!")
@@ -1001,11 +1039,12 @@ def getAudio():
         except :
             continue
 
+    print("audio end")
+    print('number of current threads is ', threading.active_count())
 
 
 
-t1= threading.Thread(target=voiceGuide, name='t1')
-t1.start()
+
 
 t2= threading.Thread(target=getAudio, name='t2')
 t2.start()
@@ -1019,7 +1058,7 @@ t2.start()
 
 
 
-
+stc = True
 home_btn = Button(root,text='Home', command=gotoHome, bg='white', fg='black', font=('helvetica', 12, 'bold'))
 practice_btn = Button(root,text='Practice', command=gotoPractice, bg='Brown', fg='white', font=('helvetica', 12, 'bold'))
 test_btn = Button(root,text='Test', command=gotoTest, bg='brown', fg='white', font=('helvetica', 12, 'bold'))
@@ -1044,5 +1083,7 @@ background.pack()
 
 root.mainloop()
 
+rootDestroyed = True
 
-
+print("wasif inside main")
+print('number of current threads is ', threading.active_count())
