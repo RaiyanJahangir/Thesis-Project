@@ -1,54 +1,19 @@
-from ast import Delete
-from ctypes import alignment
 import math
 from mimetypes import init
 from tkinter import *
 from tkinter import ttk 
 import pyttsx3
 import threading
-from cgitb import text
-from email.mime import audio
 import speech_recognition as sr
-import pyttsx3
 import pyautogui
 from PIL import Image
 import imutils 
-from subprocess import Popen
-import pyautogui
 import tensorflow as tf
 import tensorflow_hub as hub
 import numpy as np
 from scipy.spatial import distance
-import sys
 import cv2
 import PIL.ImageOps  
-from PIL import ImageFilter
-import numpy as np 
-import pandas as pd 
-import os
-from os import listdir
-import tensorflow as tf
-from keras.preprocessing.image import ImageDataGenerator
-import cv2
-import matplotlib.pyplot as plt
-import imutils 
-import random
-from tqdm import tqdm
-from sklearn.metrics import roc_curve, auc
-import matplotlib.pyplot as plt
-#from tensorflow.keras.preprocessing.image import ImageDataGenerator
-import numpy as np
-import matplotlib.pyplot as plt
-from itertools import cycle
-from sklearn import svm, datasets
-from sklearn.metrics import roc_curve, auc
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import label_binarize
-from sklearn.multiclass import OneVsRestClassifier
-from scipy import interp
-from sklearn.metrics import roc_auc_score
-from sklearn.model_selection import train_test_split
-from sklearn.utils import shuffle #shuffling the data improves the model
 
 model_url = "https://tfhub.dev/tensorflow/efficientnet/lite0/feature-vector/2" # Link to model weights 
 IMAGE_SHAPE = (224, 224)
