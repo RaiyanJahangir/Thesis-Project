@@ -587,6 +587,7 @@ def test_slope(x,px,y,py):
 def test_getY(x,px,y,py,x2):
     m = test_slope(x,px,y,py)
     y = py+m*(x2-px)
+    return y
 
 
 
@@ -737,13 +738,21 @@ def paintT(event):
     x2, y2 = (event.x+5), (event.y+5)
     color = "black"
     # display the mouse movement inside canvas
-    if test_prev_x != -1 and 0 == 1:
+    if test_prev_x != -1 and False:
         
-        for inc in np.arange(test_prev_x, event.x, 0.1):
+        for inc in np.arange(test_prev_x, event.x, 1):
+            
             xx = event.x+inc
-            yy = test_getY(float(event.x),float(test_prev_x),float(event.y),float(test_getY),float(xx))
+            
+            # yy = test_getY(float(event.x),float(test_prev_x),float(event.y),float(test_getY),float(xx))
+            
+            xxx = event.x
+            yyy = event.y
+            yy = test_getY(xxx,(test_prev_x),yyy,(test_prev_y),(xx))
+            
             x1, y1 = (xx-5), (yy-5)
             x2, y2 = (xx+5), (yy+5)
+            
             wn.create_oval(x1, y1, x2, y2, fill=color, outline=color,tags='paint')
     else:
         wn.create_oval(x1, y1, x2, y2, fill=color, outline=color,tags='paint')        
@@ -904,7 +913,7 @@ def clear():
 def voiceGuide():
     global say
     global command
-    while(1):
+    while(1 ):
         # print("rrr")
         if(say==True):
             print('Saying....')
