@@ -14,6 +14,11 @@ import numpy as np
 from scipy.spatial import distance
 import cv2
 import PIL.ImageOps  
+from datetime import datetime
+
+currentTime = str(datetime.now().time())[:-3]
+timeTracker = {currentTime:False}
+
 
 model_url = "https://tfhub.dev/tensorflow/efficientnet/lite0/feature-vector/2" # Link to model weights 
 IMAGE_SHAPE = (224, 224)
@@ -115,7 +120,7 @@ def init():
 
 practice_currentLetter='A'
 practice_dotSize = 5
-practice_threshold = 15
+practice_threshold = 13
 practice_index = 0
 practice_strokeIndex = 1
 practice_strokePointIndex = 0
@@ -182,6 +187,7 @@ def practice_makeDataset():
       
 
 def practice_correctionMSGpoint(x,y,tx,ty):
+    global currentTime
     x1,y1,ovalStartx1,ovalStarty1 = x,y,tx,ty
     ovalEndx1,ovalEndy1 = tx,ty
     x2=x1+practice_threshold+5
@@ -209,15 +215,16 @@ def practice_correctionMSGpoint(x,y,tx,ty):
     
     if len(text) == 0:
         text = "keep on going"
-
+    currentTime = str(datetime.now().time())[:-3]
     return text
 
 
 
 def practice_responseNext(x,y,tx,ty):
+    global currentTime
     x1,y1,ovalStartx1,ovalStarty1 = x,y,tx,ty
     ovalEndx1,ovalEndy1 = tx,ty
-    x2=x1+practice_threshold
+    x2=x1+practice_threshold  # practice_threshold has been determined after experimentation
     y2=y1+practice_threshold
     # print(" x1 = ",x1," y1 = ",y1," x2 = ",x2," y2 = ",y2," tx = ",tx," ty = ",ty)
     text = ""
@@ -243,6 +250,7 @@ def practice_responseNext(x,y,tx,ty):
     if len(text) == 0:
         text = "keep on going"
 
+    currentTime = str(datetime.now().time())[:-3]
     return text
 
 
@@ -250,7 +258,7 @@ def practice_responseNext(x,y,tx,ty):
 def practice_getData(event):
     global letterChoice
     global practice_currentLetter
-    global command,say
+    global command,say,currentTime
     
     
     newLetter = letterChoice.get()
@@ -258,11 +266,13 @@ def practice_getData(event):
         practice_currentLetter = newLetter
         practice_makeDataset()
         command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
+        currentTime = str(datetime.now().time())[:-3]
         say = True
         t1= threading.Thread(target=voiceGuide, name='t1')
         t1.start()
         
 def practice_getSize(event):
+    global currentTime
     global practice_dataset
     global fontsizeC
     global practice_CurrentSizeD,command,say
@@ -275,13 +285,14 @@ def practice_getSize(event):
         practice_makeDataset()
         command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
         say = True
+        currentTime = str(datetime.now().time())[:-3]
         t1= threading.Thread(target=voiceGuide, name='t1')
         t1.start()
 
 
 def practice_getDataV():
     global practice_letterChoiceV
-    global practice_currentLetter,command,say
+    global practice_currentLetter,command,say,currentTime
     
     
     newLetter = practice_letterChoiceV
@@ -290,12 +301,13 @@ def practice_getDataV():
         practice_makeDataset()
         command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
         say = True
+        currentTime = str(datetime.now().time())[:-3]
         t1= threading.Thread(target=voiceGuide, name='t1')
         t1.start()
         
 def practice_getSizeV():
     global practice_dataset
-    global practice_fontsizeV
+    global practice_fontsizeV,currentTime
     global practice_CurrentSizeD,command,say
     data = practice_fontsizeV
     divisors = [4,2,(4/3),1,0.8,(2/3),(4/7)]
@@ -306,6 +318,7 @@ def practice_getSizeV():
         practice_makeDataset()
         command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
         say = True
+        currentTime = str(datetime.now().time())[:-3]
         t1= threading.Thread(target=voiceGuide, name='t1')
         t1.start()
 
@@ -472,7 +485,7 @@ test_prev_y = -1
 
 def test_getData(event):
     global test_currentLetter,test_prev_x
-    global letterChoice,command,say,test_prev_y
+    global letterChoice,command,say,test_prev_y,currentTime
     test_newLetter = letterChoice.get()
     
     if test_newLetter != test_currentLetter:
@@ -481,13 +494,14 @@ def test_getData(event):
         print(test_currentLetter)
         command = "letter chosen "+str(test_currentLetter)
         say = True
+        currentTime = str(datetime.now().time())[:-3]
         t1= threading.Thread(target=voiceGuide, name='t1')
         t1.start()
         test_prev_x = -1
         test_prev_y = -1
 
 def test_getDataV(test_newLetter):
-    global test_currentLetter,command,say
+    global test_currentLetter,command,say,currentTime
     global test_prev_x 
     global test_prev_y 
     if test_newLetter != test_currentLetter:
@@ -496,6 +510,7 @@ def test_getDataV(test_newLetter):
         print(test_currentLetter)
         command = "letter chosen "+str(test_currentLetter)
         say = True
+        currentTime = str(datetime.now().time())[:-3]
         t1= threading.Thread(target=voiceGuide, name='t1')
         t1.start()
         test_prev_x = -1
@@ -503,7 +518,7 @@ def test_getDataV(test_newLetter):
 
 
 def test_evaluate():
-    global command,say,test_currentLetter
+    global command,say,test_currentLetter,currentTime
 
     print("coming soon!!!")
     x, y = background.winfo_rootx()+122, background.winfo_rooty()
@@ -562,6 +577,7 @@ def test_evaluate():
 
 
     text = 'Similarity is '+str(max(scores))
+    currentTime = str(datetime.now().time())[:-3]
     command=text
     say=True
     t1= threading.Thread(target=voiceGuide, name='t1')
@@ -606,9 +622,10 @@ def paintP(event):
     global practice_started
     global practice_dataset
     global command
-    global say
+    global say,currentTime
     if practice_index == len(practice_letter):
         command='Done'
+        currentTime = str(datetime.now().time())[:-3]
         say=True
         t1= threading.Thread(target=voiceGuide, name='t1')
         t1.start()
@@ -635,6 +652,7 @@ def paintP(event):
                 print("too much on right side, go left")
                 command = "too much on right side, go left"
                 say = True
+                currentTime = str(datetime.now().time())[:-3]
                 t1= threading.Thread(target=voiceGuide, name='t1')
                 t1.start()
                 practice_makeDataset()
@@ -643,6 +661,7 @@ def paintP(event):
                 print("too much on left side, go right")
                 command = "too much on left side, go right"
                 say = True
+                currentTime = str(datetime.now().time())[:-3]
                 t1= threading.Thread(target=voiceGuide, name='t1')
                 t1.start()
                 practice_makeDataset()
@@ -651,6 +670,7 @@ def paintP(event):
                 print("too much on upperside, go down")
                 command = "too much on upperside, go down"
                 say = True
+                currentTime = str(datetime.now().time())[:-3]
                 t1= threading.Thread(target=voiceGuide, name='t1')
                 t1.start()
                 practice_makeDataset()
@@ -659,6 +679,7 @@ def paintP(event):
                 print("too much on bottom side, go up")
                 command = "too much on bottom side, go up"
                 say = True
+                currentTime = str(datetime.now().time())[:-3]
                 t1= threading.Thread(target=voiceGuide, name='t1')
                 t1.start()
                 practice_makeDataset()
@@ -697,6 +718,7 @@ def paintP(event):
             print(text)
             command=text
             say=True
+            currentTime = str(datetime.now().time())[:-3]
             t1= threading.Thread(target=voiceGuide, name='t1')
             t1.start()
             draw_point = False
@@ -708,6 +730,7 @@ def paintP(event):
         print(text)
         command=text
         say=True
+        currentTime = str(datetime.now().time())[:-3]
         t1= threading.Thread(target=voiceGuide, name='t1')
         t1.start()
         
@@ -718,7 +741,7 @@ def paintP(event):
 def paintC(event):
     
     global create_maxX,create_maxY,create_minX,create_minY
-    global create_letter
+    global create_letter,currentTime
     # get x1, y1, x2, y2 co-ordinates
     x1, y1 = (event.x-5), (event.y-5)
     x2, y2 = (event.x+5), (event.y+5)
@@ -755,12 +778,13 @@ background=Canvas(root, width=screen_width, height=screen_height, bg='#eeeeee')
 
 def gotoHome():
     global session
-    global background
+    global background,currentTime
     global create_txtfld,command,say
     session = 'Home'
     init()
     command = 'Home ready'
     say = True
+    currentTime = str(datetime.now().time())[:-3]
     t1= threading.Thread(target=voiceGuide, name='t1')
     t1.start()
     wn.delete('paint')
@@ -774,12 +798,13 @@ def gotoPractice():
     global letterChoice
     global fontsizeC
     global select_letter
-    global select_fontsize
+    global select_fontsize,currentTime
     strrng = StringVar() 
     init()
     practice_makeDataset()
     command = 'Practice ready'
     say = True
+    currentTime = str(datetime.now().time())[:-3]
     t1= threading.Thread(target=voiceGuide, name='t1')
     t1.start()
     practice_btn['background'] = 'white'
@@ -852,13 +877,14 @@ def gotoCreate():
     global select_letter,command,say
     global create_txtfld
     global session
-    global background
+    global background,currentTime
     session = 'Create'
 
     init()
     create_clearCanvas()
     command = 'create ready'
     say = True
+    currentTime = str(datetime.now().time())[:-3]
     t1= threading.Thread(target=voiceGuide, name='t1')
     t1.start()
     create_btn['background'] = 'white'
@@ -873,7 +899,7 @@ def gotoCreate():
 
 
 def clear():
-    global wn,command,say
+    global wn,command,say,currentTime
     if session == 'Home':
         wn.delete('paint')
         wn.delete('follow')
@@ -886,6 +912,7 @@ def clear():
         wn.delete('follow')
     command='screen cleared'
     say=True
+    currentTime = str(datetime.now().time())[:-3]
     t1= threading.Thread(target=voiceGuide, name='t1')
     t1.start()
 
@@ -909,10 +936,13 @@ def clear():
 def voiceGuide():
     global say
     global command
+    global timeTracker
     lim = 1
     print("Wasif inside voiceGuide")
     try:
         if(say==True):
+            if timeTracker[currentTime] == True :
+                return 
             print('Saying....')
             # Initialize the engine
             engine = pyttsx3.init()
@@ -922,6 +952,7 @@ def voiceGuide():
             engine.say(command)
             engine.runAndWait()
             say=False
+            timeTracker[currentTime] = True
     except:
         say=False
         return 
