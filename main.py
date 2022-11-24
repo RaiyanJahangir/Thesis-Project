@@ -16,7 +16,29 @@ import cv2
 import PIL.ImageOps  
 from datetime import datetime
 
-currentTime = str(datetime.now().time())[:-3]
+previous_tick = datetime.now()
+should_speak = True
+
+def justify_voice():
+    global previous_tick,should_speak
+    current_tick = datetime.now()
+    elapsed = current_tick-previous_tick
+    elapsed_s = elapsed.total_seconds()
+    # print(elapsed.total_seconds())
+    if float(elapsed_s) >= 0.001:
+        should_speak = True
+    else:
+        should_speak = False
+
+    if should_speak:
+        previous_tick = current_tick
+
+
+def current_time():
+    justify_voice()
+    return str(datetime.now().time())[:-3]
+
+currentTime = current_time()
 timeTracker = {currentTime:False}
 
 
@@ -215,7 +237,9 @@ def practice_correctionMSGpoint(x,y,tx,ty):
     
     if len(text) == 0:
         text = "keep on going"
-    currentTime = str(datetime.now().time())[:-3]
+    new_time = current_time()
+    if should_speak:
+        currentTime = new_time
     return text
 
 
@@ -249,8 +273,11 @@ def practice_responseNext(x,y,tx,ty):
     
     if len(text) == 0:
         text = "keep on going"
-
-    currentTime = str(datetime.now().time())[:-3]
+    
+    new_time = current_time()
+    if should_speak:
+        currentTime = new_time
+        say = True
     return text
 
 
@@ -266,10 +293,15 @@ def practice_getData(event):
         practice_currentLetter = newLetter
         practice_makeDataset()
         command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
-        currentTime = str(datetime.now().time())[:-3]
-        say = True
-        t1= threading.Thread(target=voiceGuide, name='t1')
-        t1.start()
+        
+        new_time = current_time()
+        if should_speak:
+            currentTime = new_time
+            say = True
+            t1= threading.Thread(target=voiceGuide, name='t1')
+            t1.start()
+        
+        
         
 def practice_getSize(event):
     global currentTime
@@ -284,11 +316,12 @@ def practice_getSize(event):
         practice_CurrentSizeD = newSizeD
         practice_makeDataset()
         command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
-        say = True
-        currentTime = str(datetime.now().time())[:-3]
-        t1= threading.Thread(target=voiceGuide, name='t1')
-        t1.start()
-
+        new_time = current_time()
+        if should_speak:
+            currentTime = new_time
+            say = True
+            t1= threading.Thread(target=voiceGuide, name='t1')
+            t1.start()
 
 def practice_getDataV():
     global practice_letterChoiceV
@@ -300,10 +333,12 @@ def practice_getDataV():
         practice_currentLetter = newLetter
         practice_makeDataset()
         command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
-        say = True
-        currentTime = str(datetime.now().time())[:-3]
-        t1= threading.Thread(target=voiceGuide, name='t1')
-        t1.start()
+        new_time = current_time()
+        if should_speak:
+            currentTime = new_time
+            say = True
+            t1= threading.Thread(target=voiceGuide, name='t1')
+            t1.start()
         
 def practice_getSizeV():
     global practice_dataset
@@ -317,10 +352,12 @@ def practice_getSizeV():
         practice_CurrentSizeD = newSizeD
         practice_makeDataset()
         command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
-        say = True
-        currentTime = str(datetime.now().time())[:-3]
-        t1= threading.Thread(target=voiceGuide, name='t1')
-        t1.start()
+        new_time = current_time()
+        if should_speak:
+            currentTime = new_time
+            say = True
+            t1= threading.Thread(target=voiceGuide, name='t1')
+            t1.start()
 
 
 
@@ -328,6 +365,7 @@ def practice_getSizeV():
 # create
 
 create_txtfld = Entry()
+create_stroke_fld = Entry()
 
 create_currentLetter='A'
 create_dotSize = 2
@@ -370,9 +408,17 @@ def create_getLetter():
 
     print(create_making)
 
+def create_getLetter_stoke_name():
+    
+    
+    pass
+
+
+
 def create_saveLetter():
     global create_maxX,create_maxY,create_minX,create_minY
-    global create_letter,stc
+    global create_letter,stc,wn
+    global background
     if len(create_letter) == 0:
         return 
     # if create_minY < 120 or create_maxY > 480:
@@ -414,6 +460,17 @@ def create_saveLetter():
         tmpstroke.append(tmpletter)
         
     stroke = tmpstroke
+
+    x, y = background.winfo_rootx()+122, background.winfo_rooty()
+    w, h = background.winfo_width()-130, background.winfo_height()-77
+    pyautogui.screenshot('images/'+create_making+'.jpg', region=(x, y, w, h))
+    image = Image.open('images/'+create_making+'.jpg')
+    inverted_image = PIL.ImageOps.invert(image)
+    inverted_image.save('images/'+create_making+'.jpg')
+
+    ex_crop_img = crop_contour( cv2.imread('images/'+create_making+'.jpg'), True)
+    cv2.imwrite('images/'+create_making+'.jpg',ex_crop_img)
+
     
     # add = 0
     # for letters in stroke:
@@ -434,30 +491,38 @@ def create_saveLetter():
     for row in lines:
         f.write(row + "\n")
     f.close()    
+
+    stc = False
     
+    wn.delete('paint')
     filename = "letters/"+create_making+".txt"
     print("_________________________"+filename)
     f = open(filename, "w")
+
     for letters in stroke:
         # print(letters)
+            
         for point in letters:
             f.write(str(point[0])+" "+str(point[1])+" ")
+            if stc and False:
+                color="blue"
+                x1, y1 = (point[0]-5), (point[1]-5)
+                x2, y2 = (point[0]+5), (point[1]+5)
+                wn.create_oval(x1, y1, x2, y2, fill=color, outline=color,tags='strokes')
+        
         f.write("\n")
+        # input("Press Enter to continue...")
+
+        
+        # wn.delete('strokes')
+        # stc = True
+
     f.close()
     print("file saved")
 
     #wn.delete('guideline')
 
-    x, y = background.winfo_rootx()+122, background.winfo_rooty()
-    w, h = background.winfo_width()-130, background.winfo_height()-77
-    pyautogui.screenshot('images/'+create_making+'.jpg', region=(x, y, w, h))
-    image = Image.open('images/'+create_making+'.jpg')
-    inverted_image = PIL.ImageOps.invert(image)
-    inverted_image.save('images/'+create_making+'.jpg')
-
-    ex_crop_img = crop_contour( cv2.imread('images/'+create_making+'.jpg'), True)
-    cv2.imwrite('images/'+create_making+'.jpg',ex_crop_img)
-
+    
     # for j in range(150,550,100):
     #     gcl = 'blue'
     #     if j == 150 or j==450:
@@ -493,10 +558,12 @@ def test_getData(event):
         wn.delete('all')
         print(test_currentLetter)
         command = "letter chosen "+str(test_currentLetter)
-        say = True
-        currentTime = str(datetime.now().time())[:-3]
-        t1= threading.Thread(target=voiceGuide, name='t1')
-        t1.start()
+        new_time = current_time()
+        if should_speak:
+            currentTime = new_time
+            say = True
+            t1= threading.Thread(target=voiceGuide, name='t1')
+            t1.start()
         test_prev_x = -1
         test_prev_y = -1
 
@@ -509,18 +576,21 @@ def test_getDataV(test_newLetter):
         wn.delete('all')
         print(test_currentLetter)
         command = "letter chosen "+str(test_currentLetter)
-        say = True
-        currentTime = str(datetime.now().time())[:-3]
-        t1= threading.Thread(target=voiceGuide, name='t1')
-        t1.start()
+        new_time = current_time()
+        if should_speak:
+            currentTime = new_time
+            say = True
+            t1= threading.Thread(target=voiceGuide, name='t1')
+            t1.start()
         test_prev_x = -1
         test_prev_y = -1
 
 
-def test_evaluate():
+
+def test_evaluate_for_one():
     global command,say,test_currentLetter,currentTime
 
-    print("coming soon!!!")
+    # print("coming soon!!!")
     x, y = background.winfo_rootx()+122, background.winfo_rooty()
     w, h = background.winfo_width()-130, background.winfo_height()-77
     pyautogui.screenshot('screenshot.jpg', region=(x, y, w, h))
@@ -533,7 +603,8 @@ def test_evaluate():
     cv2.imwrite('screenshot.jpg',ex_crop_img)
     
     img_1='screenshot.jpg'
-    img_2='images/'+test_currentLetter+'.jpg'
+    img_2='augmented.jpg'
+    # img_2='images/'+test_currentLetter+'.jpg'
 
     # Calculations for image 1
     img_1 = Image.open(img_1).convert('L').resize(IMAGE_SHAPE) # Resizing the image to required size
@@ -573,15 +644,81 @@ def test_evaluate():
         score = score / interval * 100
         scores.append(score)
 
-    print('Similarity is ',max(scores))
+    return max(scores)
 
+def erosion_image(image_file,shift):
+    image = cv2.imread(image_file)
+    kernel = np.ones((shift,shift),np.uint8)
+    image2 = cv2.erode(image,kernel,iterations = 1)
+    cv2.imwrite("augmented.jpg", image2)
+    # cv2.imwrite("augmented_image_part4" + "/C_erote-" + str(shift) + ".jpg", image2)
+    return test_evaluate_for_one()
+
+def dilation_image(image_file,shift):
+    image = cv2.imread(image_file)
+    kernel = np.ones((shift, shift), np.uint8)
+    image2 = cv2.dilate(image,kernel,iterations = 1)
+    cv2.imwrite("augmented.jpg", image2)
+    # cv2.imwrite("augmented_image_part4" + "/C_dialate-" + str(shift) + ".jpg", image2)
+    return test_evaluate_for_one()
+
+def rotate_image(image_file,deg):
+    image = cv2.imread(image_file)
+    rows, cols,c = image.shape
+    M = cv2.getRotationMatrix2D((cols/2,rows/2), deg, 1)
+    image2 = cv2.warpAffine(image, M, (cols, rows))
+    cv2.imwrite("augmented.jpg", image2)
+    # cv2.imwrite("augmented_image_part4" + "/C_rotate-" + str(deg) + ".jpg", image2)
+    return test_evaluate_for_one()
+
+def scale_image(image_file,fx,fy):
+    image = cv2.imread(image_file)
+    image2 = cv2.resize(image,None,fx=fx, fy=fy, interpolation = cv2.INTER_CUBIC)
+    cv2.imwrite("augmented.jpg", image2)
+    # cv2.imwrite("augmented_image_part4" + "/C_scale-" + str(fx)+ "_" +str(fy) + ".jpg", image2)
+    return test_evaluate_for_one()
+
+
+def test_evaluate():
+    
+    
+    src='images/'+test_currentLetter+'.jpg'
+    scores = []
+    cnt = 0
+    for i in np.arange(-5, 5, 0.5):
+        scores.append(rotate_image(src,i))
+        # print(str(scores[len(scores) - 1]))
+        cnt = cnt+1
+        print("rotation",i,cnt,str(scores[len(scores) - 1]))
+
+    for i in np.arange(0.1, 2, 0.5):
+        for j in np.arange(0.1, 2, 0.5):
+            scores.append(scale_image(src,i,j))
+            # print(str(scores[len(scores) - 1]))
+            cnt = cnt+1
+            print("scale",i,j,cnt,str(scores[len(scores) - 1]))
+
+    for i in range(0, 10, 1):
+        scores.append(erosion_image(src,i))
+        # print(str(scores[len(scores) - 1]))
+        cnt = cnt+1
+        print("erote",i,cnt,str(scores[len(scores) - 1]))
+
+    for i in range(0, 10, 1):
+        scores.append(dilation_image(src,i))
+        # print(str(scores[len(scores) - 1]))
+        cnt = cnt+1
+        print("dialate",i,cnt,str(scores[len(scores) - 1]))
 
     text = 'Similarity is '+str(max(scores))
-    currentTime = str(datetime.now().time())[:-3]
     command=text
-    say=True
-    t1= threading.Thread(target=voiceGuide, name='t1')
-    t1.start()
+    print(command)
+    new_time = current_time()
+    if should_speak:
+        currentTime = new_time
+        say = True
+        t1= threading.Thread(target=voiceGuide, name='t1')
+        t1.start()
 
 def test_slope(x,px,y,py):
     return (y-py)/(x-px)
@@ -625,10 +762,12 @@ def paintP(event):
     global say,currentTime
     if practice_index == len(practice_letter):
         command='Done'
-        currentTime = str(datetime.now().time())[:-3]
-        say=True
-        t1= threading.Thread(target=voiceGuide, name='t1')
-        t1.start()
+        new_time = current_time()
+        if should_speak:
+            currentTime = new_time
+            say = True
+            t1= threading.Thread(target=voiceGuide, name='t1')
+            t1.start()
         print("Done!!!")
         return 
     
@@ -651,37 +790,45 @@ def paintP(event):
             if xc>screen_width-130:
                 print("too much on right side, go left")
                 command = "too much on right side, go left"
-                say = True
-                currentTime = str(datetime.now().time())[:-3]
-                t1= threading.Thread(target=voiceGuide, name='t1')
-                t1.start()
+                new_time = current_time()
+                if should_speak:
+                    currentTime = new_time
+                    say = True
+                    t1= threading.Thread(target=voiceGuide, name='t1')
+                    t1.start()
                 practice_makeDataset()
                 break
             if xc<10 :
                 print("too much on left side, go right")
                 command = "too much on left side, go right"
-                say = True
-                currentTime = str(datetime.now().time())[:-3]
-                t1= threading.Thread(target=voiceGuide, name='t1')
-                t1.start()
+                new_time = current_time()
+                if should_speak:
+                    currentTime = new_time
+                    say = True
+                    t1= threading.Thread(target=voiceGuide, name='t1')
+                    t1.start()
                 practice_makeDataset()
                 break
             if yc<10 :
                 print("too much on upperside, go down")
                 command = "too much on upperside, go down"
-                say = True
-                currentTime = str(datetime.now().time())[:-3]
-                t1= threading.Thread(target=voiceGuide, name='t1')
-                t1.start()
+                new_time = current_time()
+                if should_speak:
+                    currentTime = new_time
+                    say = True
+                    t1= threading.Thread(target=voiceGuide, name='t1')
+                    t1.start()
                 practice_makeDataset()
                 break
             if yc>screen_height-10 :
                 print("too much on bottom side, go up")
                 command = "too much on bottom side, go up"
-                say = True
-                currentTime = str(datetime.now().time())[:-3]
-                t1= threading.Thread(target=voiceGuide, name='t1')
-                t1.start()
+                new_time = current_time()
+                if should_speak:
+                    currentTime = new_time
+                    say = True
+                    t1= threading.Thread(target=voiceGuide, name='t1')
+                    t1.start()
                 practice_makeDataset()
                 break
             
@@ -717,10 +864,12 @@ def paintP(event):
             text = practice_correctionMSGpoint(x,y,pretX,pretY)
             print(text)
             command=text
-            say=True
-            currentTime = str(datetime.now().time())[:-3]
-            t1= threading.Thread(target=voiceGuide, name='t1')
-            t1.start()
+            new_time = current_time()
+            if should_speak:
+                currentTime = new_time
+                say = True
+                t1= threading.Thread(target=voiceGuide, name='t1')
+                t1.start()
             draw_point = False
     
     
@@ -729,10 +878,12 @@ def paintP(event):
         text = practice_responseNext(x,y,targetX,targetY)
         print(text)
         command=text
-        say=True
-        currentTime = str(datetime.now().time())[:-3]
-        t1= threading.Thread(target=voiceGuide, name='t1')
-        t1.start()
+        new_time = current_time()
+        if should_speak:
+            currentTime = new_time
+            say = True
+            t1= threading.Thread(target=voiceGuide, name='t1')
+            t1.start()
         
 
         
@@ -783,10 +934,12 @@ def gotoHome():
     session = 'Home'
     init()
     command = 'Home ready'
-    say = True
-    currentTime = str(datetime.now().time())[:-3]
-    t1= threading.Thread(target=voiceGuide, name='t1')
-    t1.start()
+    new_time = current_time()
+    if should_speak:
+        currentTime = new_time
+        say = True
+        t1= threading.Thread(target=voiceGuide, name='t1')
+        t1.start()
     wn.delete('paint')
     wn.delete('follow')
     home_btn['background'] = 'white'
@@ -803,10 +956,12 @@ def gotoPractice():
     init()
     practice_makeDataset()
     command = 'Practice ready'
-    say = True
-    currentTime = str(datetime.now().time())[:-3]
-    t1= threading.Thread(target=voiceGuide, name='t1')
-    t1.start()
+    new_time = current_time()
+    if should_speak:
+        currentTime = new_time
+        say = True
+        t1= threading.Thread(target=voiceGuide, name='t1')
+        t1.start()
     practice_btn['background'] = 'white'
     practice_btn['foreground'] = 'black'
     select_letter = Label(background, text = "Select Letter :", font = ("Times New Roman", 12))
@@ -842,7 +997,7 @@ def gotoPractice():
 
 
 def gotoTest():
-    global session,command,say
+    global session,command,say,currentTime
     global letterChoice
     global select_letter,test_prev_x,test_prev_y
     session = 'Test'
@@ -851,9 +1006,12 @@ def gotoTest():
     wn.delete('paint')
     wn.delete('follow')
     command = 'Test ready'
-    say = True
-    t1= threading.Thread(target=voiceGuide, name='t1')
-    t1.start()
+    new_time = current_time()
+    if should_speak:
+        currentTime = new_time
+        say = True
+        t1= threading.Thread(target=voiceGuide, name='t1')
+        t1.start()
     test_btn['background'] = 'white'
     test_btn['foreground'] = 'black'
     select_letter = Label(background, text = "Select Letter :", font = ("Times New Roman", 12))
@@ -883,10 +1041,12 @@ def gotoCreate():
     init()
     create_clearCanvas()
     command = 'create ready'
-    say = True
-    currentTime = str(datetime.now().time())[:-3]
-    t1= threading.Thread(target=voiceGuide, name='t1')
-    t1.start()
+    new_time = current_time()
+    if should_speak:
+        currentTime = new_time
+        say = True
+        t1= threading.Thread(target=voiceGuide, name='t1')
+        t1.start()
     create_btn['background'] = 'white'
     create_btn['foreground'] = 'black'
     select_letter = Label(background, text = "Select Letter :", font = ("Times New Roman", 12))
@@ -911,10 +1071,12 @@ def clear():
         wn.delete('paint')
         wn.delete('follow')
     command='screen cleared'
-    say=True
-    currentTime = str(datetime.now().time())[:-3]
-    t1= threading.Thread(target=voiceGuide, name='t1')
-    t1.start()
+    new_time = current_time()
+    if should_speak:
+        currentTime = new_time
+        say = True
+        t1= threading.Thread(target=voiceGuide, name='t1')
+        t1.start()
 
 
 
@@ -934,14 +1096,17 @@ def clear():
 # voiceGuide _____________________________________________
 
 def voiceGuide():
+    return 
     global say
     global command
     global timeTracker
     lim = 1
-    print("Wasif inside voiceGuide")
+    print("Wasif inside voiceGuide at ",currentTime)
     try:
         if(say==True):
-            if timeTracker[currentTime] == True :
+            print(command," ________entered here",currentTime)
+
+            if currentTime in timeTracker.keys():
                 return 
             print('Saying....')
             # Initialize the engine
@@ -969,6 +1134,7 @@ def voiceGuide():
 # Speech Detection __________________________________________________________
 
 def getAudio():
+    return 
     global practice_letterChoiceV
     global practice_fontsizeV
     while rootDestroyed == False:
@@ -1061,11 +1227,14 @@ test_btn = Button(root,text='Test', command=gotoTest, bg='brown', fg='white', fo
 create_btn = Button(root,text='Create', command=gotoCreate, bg='brown', fg='white', font=('helvetica', 12, 'bold'))
 clear_btn = Button(root,text='clear', command=clear, bg='brown', fg='white', font=('helvetica', 12, 'bold'))
 
+
 background.create_window(60,  50,height = 40,width = 100,window=home_btn)
 background.create_window(60, 120,height = 40,width = 100,window=practice_btn)
 background.create_window(60, 190,height = 40,width = 100,window=test_btn)
 background.create_window(60, 260,height = 40,width = 100,window=create_btn)
 background.create_window(60, 330,height = 40,width = 100,window=clear_btn)
+
+
 
 wn=Canvas(root, width=screen_width, height=screen_height, bg='white')
 wn.bind('<B1-Motion>', paint)
