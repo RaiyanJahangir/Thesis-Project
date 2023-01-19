@@ -1,5 +1,6 @@
 import math
 from mimetypes import init
+import random
 from tkinter import *
 from tkinter import ttk 
 import pyttsx3
@@ -15,6 +16,10 @@ from scipy.spatial import distance
 import cv2
 import PIL.ImageOps  
 from datetime import datetime
+import os
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+import pickle
 
 previous_tick = datetime.now()
 should_speak = True
@@ -415,6 +420,87 @@ def create_getLetter_stoke_name():
 
 
 
+def create_erosion_image(image_file,shift):
+    image = cv2.imread(image_file)
+    kernel = np.ones((shift,shift),np.uint8)
+    image2 = cv2.erode(image,kernel,iterations = 1)
+    cv2.imwrite("augmented.jpg", image2)
+    # cv2.imwrite("augmented_image_part4" + "/C_erote-" + str(shift) + ".jpg", image2)
+    # return test_evaluate_for_one()
+    return image2
+
+def create_dilation_image(image_file,shift):
+    image = cv2.imread(image_file)
+    kernel = np.ones((shift, shift), np.uint8)
+    image2 = cv2.dilate(image,kernel,iterations = 1)
+    cv2.imwrite("augmented.jpg", image2)
+    # # cv2.imwrite("augmented_image_part4" + "/C_dialate-" + str(shift) + ".jpg", image2)
+    # return test_evaluate_for_one()
+    return image2
+
+def create_rotate_image(image_file,deg):
+    image = cv2.imread(image_file)
+    rows, cols,c = image.shape
+    M = cv2.getRotationMatrix2D((cols/2,rows/2), deg, 1)
+    image2 = cv2.warpAffine(image, M, (cols, rows))
+    cv2.imwrite("augmented.jpg", image2)
+    # # cv2.imwrite("augmented_image_part4" + "/C_rotate-" + str(deg) + ".jpg", image2)
+    # return test_evaluate_for_one()
+    return image2
+
+def create_scale_image(image_file,fx,fy):
+    image = cv2.imread(image_file)
+    image2 = cv2.resize(image,None,fx=fx, fy=fy, interpolation = cv2.INTER_CUBIC)
+    cv2.imwrite("augmented.jpg", image2)
+    # # cv2.imwrite("augmented_image_part4" + "/C_scale-" + str(fx)+ "_" +str(fy) + ".jpg", image2)
+    # return test_evaluate_for_one()
+    return image2
+
+
+def create_ML_Model():
+    catagories = os.listdir('image_dataset/')
+   # print(catagories)
+    path, dirs, files = next(os.walk("image_dataset/"))
+    #print(path)
+
+    data=[]
+    for i in catagories:
+        path1=os.path.join(path,i)
+        label = catagories.index(i)
+        for img in os.listdir(path1):
+            imgpath = os.path.join(path1,img)
+           # print(imgpath)
+            img = cv2.imread(imgpath,0)
+            try:
+                img = cv2.resize(img,(50,50))
+                image = np.array(img).flatten()
+                data.append([image,label])
+            except Exception as e:
+                pass
+
+    random.shuffle(data)
+    features = []
+    labels = []
+    for feature,label in data:
+        features.append(feature)
+        labels.append(label)
+
+    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size = 0.3, random_state = 101)
+
+    model = SVC(C=1, kernel='poly',gamma='auto',probability=True)
+    model.fit(X_train, y_train)
+    prediction = model.predict(X_test)
+    acccuracy = model.score(X_test, y_test)
+    print("prediction :",prediction)
+    print("Accuracy :",acccuracy)
+
+    pick = open('svm.sav','wb')
+    pickle.dump(model,pick)
+    pick.close()
+
+
+
+
 def create_saveLetter():
     global create_maxX,create_maxY,create_minX,create_minY
     global create_letter,stc,wn
@@ -461,6 +547,17 @@ def create_saveLetter():
         
     stroke = tmpstroke
 
+
+    base_dir = 'image_dataset/'
+    train_dir = os.path.join(base_dir, create_making)
+    os.listdir(base_dir)
+    list = os.listdir(base_dir)
+    if create_making in list: 
+        #print(list)
+        pass
+    else: 
+        os.mkdir(train_dir)
+
     x, y = background.winfo_rootx()+122, background.winfo_rooty()
     w, h = background.winfo_width()-130, background.winfo_height()-77
     pyautogui.screenshot('images/'+create_making+'.jpg', region=(x, y, w, h))
@@ -470,7 +567,38 @@ def create_saveLetter():
 
     ex_crop_img = crop_contour( cv2.imread('images/'+create_making+'.jpg'), True)
     cv2.imwrite('images/'+create_making+'.jpg',ex_crop_img)
+    cv2.imwrite('image_dataset/'+create_making+'/'+create_making+'_Standard.jpg',ex_crop_img)
+    print('Hello at create evaluate')
 
+    image ='image_dataset/'+create_making+'/'+create_making+'_Standard.jpg'
+
+    cnt = 1
+    for i in np.arange(-5, 5, 0.5):
+        new_img=create_rotate_image(image,i)
+        cv2.imwrite('image_dataset/'+create_making+'/'+create_making+'_Rotate'+str(cnt)+'.jpg',new_img)
+        cnt = cnt+1
+
+    cnt = 1
+    for i in np.arange(0.1, 2, 0.5):
+        for j in np.arange(0.1, 2, 0.5):
+            new_img=create_scale_image(image,i,j)
+            cv2.imwrite('image_dataset/'+create_making+'/'+create_making+'_Scale'+str(cnt)+'.jpg',new_img)
+            cnt=cnt+1
+
+    for i in range(0, 10, 1):
+        new_img=create_erosion_image(image,i)
+        cv2.imwrite('image_dataset/'+create_making+'/'+create_making+'_Erode'+str(cnt)+'.jpg',new_img)
+        cnt = cnt+1
+
+    for i in range(0, 10, 1):
+        new_img=create_dilation_image(image,i)
+        cv2.imwrite('image_dataset/'+create_making+'/'+create_making+'_Dilate'+str(cnt)+'.jpg',new_img)
+        cnt = cnt+1
+
+    
+    # Machine Learning --------------------
+    create_ML_Model()
+    
     
     # add = 0
     # for letters in stroke:
@@ -546,6 +674,27 @@ test_index = 0
 test_prev_x = -1
 test_prev_y = -1
 
+def test_predict_with_model():
+
+    catagories = os.listdir('image_dataset/')
+    path, dirs, files = next(os.walk("image_dataset/"))
+
+    pick = open('svm.sav','rb')
+    model = pickle.load(pick)
+    pick.close()
+
+    imgpath = "screenshot.jpg"
+    img = cv2.imread(imgpath,0)
+
+    img = cv2.resize(img,(50,50))
+    #plt.imshow(img,cmap='gray')
+    image = np.array(img).flatten()
+    confidence = model.predict_proba([image])
+    print(confidence)
+    prediction = model.predict([image])
+    print("Prediction:",prediction)
+    print("prediction :",catagories[prediction[0]])
+
 
 
 def test_getData(event):
@@ -601,124 +750,126 @@ def test_evaluate_for_one():
 
     ex_crop_img = crop_contour( cv2.imread('screenshot.jpg'), True)
     cv2.imwrite('screenshot.jpg',ex_crop_img)
+
+    test_predict_with_model()
     
-    img_1='screenshot.jpg'
-    img_2='augmented.jpg'
-    # img_2='images/'+test_currentLetter+'.jpg'
+    # img_1='screenshot.jpg'
+    # img_2='augmented.jpg'
+    # # img_2='images/'+test_currentLetter+'.jpg'
 
-    # Calculations for image 1
-    img_1 = Image.open(img_1).convert('L').resize(IMAGE_SHAPE) # Resizing the image to required size
-    # img_1.save('img_1.jpg')
-    img_1 = np.stack((img_1,)*3, axis=-1) # Converting the image into a color representation for each pixel
-    img_1 = np.array(img_1)/255.0 # Normalizing the values between 0 and 1
-    embedding_img1 = model.predict(img_1[np.newaxis, ...]) # Extracting the features
-    embedding_img1_np = np.array(embedding_img1) # Converting to numpy array
-    flattened_feature_img1 = embedding_img1_np.flatten() # Converting matrix to a vector
+    # # Calculations for image 1
+    # img_1 = Image.open(img_1).convert('L').resize(IMAGE_SHAPE) # Resizing the image to required size
+    # # img_1.save('img_1.jpg')
+    # img_1 = np.stack((img_1,)*3, axis=-1) # Converting the image into a color representation for each pixel
+    # img_1 = np.array(img_1)/255.0 # Normalizing the values between 0 and 1
+    # embedding_img1 = model.predict(img_1[np.newaxis, ...]) # Extracting the features
+    # embedding_img1_np = np.array(embedding_img1) # Converting to numpy array
+    # flattened_feature_img1 = embedding_img1_np.flatten() # Converting matrix to a vector
 
-    # Calculations for image 2
-    img_2 = Image.open(img_2).convert('L').resize(IMAGE_SHAPE) # Resizing the image to required size
-    # img_2.save('img_2.jpg')
-    img_2 = np.stack((img_2,)*3, axis=-1) # Converting the image into a color representation for each pixel
-    img_2 = np.array(img_2)/255.0 # Normalizing the values between 0 and 1
-    embedding_img2 = model.predict(img_2[np.newaxis, ...]) # Extracting the features
-    embedding_img2_np = np.array(embedding_img2) # Converting to numpy array
-    flattened_feature_img2 = embedding_img2_np.flatten() # Converting matrix to a vector
+    # # Calculations for image 2
+    # img_2 = Image.open(img_2).convert('L').resize(IMAGE_SHAPE) # Resizing the image to required size
+    # # img_2.save('img_2.jpg')
+    # img_2 = np.stack((img_2,)*3, axis=-1) # Converting the image into a color representation for each pixel
+    # img_2 = np.array(img_2)/255.0 # Normalizing the values between 0 and 1
+    # embedding_img2 = model.predict(img_2[np.newaxis, ...]) # Extracting the features
+    # embedding_img2_np = np.array(embedding_img2) # Converting to numpy array
+    # flattened_feature_img2 = embedding_img2_np.flatten() # Converting matrix to a vector
 
-    methods = ['sqeuclidean', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
-        'dice', 'euclidean', 'hamming', 'jaccard', 'jensenshannon', 'kulsinski',
-        'matching', 'minkowski', 'rogerstanimoto', 'russellrao',
-        'sokalmichener', 'sokalsneath', 'braycurtis', 'yule']
+    # methods = ['sqeuclidean', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
+    #     'dice', 'euclidean', 'hamming', 'jaccard', 'jensenshannon', 'kulsinski',
+    #     'matching', 'minkowski', 'rogerstanimoto', 'russellrao',
+    #     'sokalmichener', 'sokalsneath', 'braycurtis', 'yule']
 
-    mins = [0,0,0,0,0,0,0,0,0,0,0,0.475,0,0,0,0.475,0,0,0,0]
-    maxes = [150,450, 2.5, 200, .5, .4, .4, 13, .6, 1, 0.5, 1, .6, 13, .4, .8, .5, .7, .5, .3]
-    scores = []
+    # mins = [0,0,0,0,0,0,0,0,0,0,0,0.475,0,0,0,0.475,0,0,0,0]
+    # maxes = [150,450, 2.5, 200, .5, .4, .4, 13, .6, 1, 0.5, 1, .6, 13, .4, .8, .5, .7, .5, .3]
+    # scores = []
 
-    for i, m in enumerate(methods):
+    # for i, m in enumerate(methods):
 
-        metric = m # Try using any one of the methods listed above if needed
-        dist_boyboy = distance.cdist([flattened_feature_img1], [flattened_feature_img2],metric)[0]      # Finding similarity 
+    #     metric = m # Try using any one of the methods listed above if needed
+    #     dist_boyboy = distance.cdist([flattened_feature_img1], [flattened_feature_img2],metric)[0]      # Finding similarity 
 
-        score = max(0, maxes[i] - dist_boyboy[0])
-        #print(score)
-        interval = maxes[i] - mins[i]
-        score = score / interval * 100
-        scores.append(score)
+    #     score = max(0, maxes[i] - dist_boyboy[0])
+    #     #print(score)
+    #     interval = maxes[i] - mins[i]
+    #     score = score / interval * 100
+    #     scores.append(score)
 
-    return max(scores)
+    # return max(scores)
 
-def erosion_image(image_file,shift):
-    image = cv2.imread(image_file)
-    kernel = np.ones((shift,shift),np.uint8)
-    image2 = cv2.erode(image,kernel,iterations = 1)
-    cv2.imwrite("augmented.jpg", image2)
-    # cv2.imwrite("augmented_image_part4" + "/C_erote-" + str(shift) + ".jpg", image2)
-    return test_evaluate_for_one()
+# def erosion_image(image_file,shift):
+#     image = cv2.imread(image_file)
+#     kernel = np.ones((shift,shift),np.uint8)
+#     image2 = cv2.erode(image,kernel,iterations = 1)
+#     cv2.imwrite("augmented.jpg", image2)
+#     # cv2.imwrite("augmented_image_part4" + "/C_erote-" + str(shift) + ".jpg", image2)
+#     return test_evaluate_for_one()
 
-def dilation_image(image_file,shift):
-    image = cv2.imread(image_file)
-    kernel = np.ones((shift, shift), np.uint8)
-    image2 = cv2.dilate(image,kernel,iterations = 1)
-    cv2.imwrite("augmented.jpg", image2)
-    # cv2.imwrite("augmented_image_part4" + "/C_dialate-" + str(shift) + ".jpg", image2)
-    return test_evaluate_for_one()
+# def dilation_image(image_file,shift):
+#     image = cv2.imread(image_file)
+#     kernel = np.ones((shift, shift), np.uint8)
+#     image2 = cv2.dilate(image,kernel,iterations = 1)
+#     cv2.imwrite("augmented.jpg", image2)
+#     # cv2.imwrite("augmented_image_part4" + "/C_dialate-" + str(shift) + ".jpg", image2)
+#     return test_evaluate_for_one()
 
-def rotate_image(image_file,deg):
-    image = cv2.imread(image_file)
-    rows, cols,c = image.shape
-    M = cv2.getRotationMatrix2D((cols/2,rows/2), deg, 1)
-    image2 = cv2.warpAffine(image, M, (cols, rows))
-    cv2.imwrite("augmented.jpg", image2)
-    # cv2.imwrite("augmented_image_part4" + "/C_rotate-" + str(deg) + ".jpg", image2)
-    return test_evaluate_for_one()
+# def rotate_image(image_file,deg):
+#     image = cv2.imread(image_file)
+#     rows, cols,c = image.shape
+#     M = cv2.getRotationMatrix2D((cols/2,rows/2), deg, 1)
+#     image2 = cv2.warpAffine(image, M, (cols, rows))
+#     cv2.imwrite("augmented.jpg", image2)
+#     # cv2.imwrite("augmented_image_part4" + "/C_rotate-" + str(deg) + ".jpg", image2)
+#     return test_evaluate_for_one()
 
-def scale_image(image_file,fx,fy):
-    image = cv2.imread(image_file)
-    image2 = cv2.resize(image,None,fx=fx, fy=fy, interpolation = cv2.INTER_CUBIC)
-    cv2.imwrite("augmented.jpg", image2)
-    # cv2.imwrite("augmented_image_part4" + "/C_scale-" + str(fx)+ "_" +str(fy) + ".jpg", image2)
-    return test_evaluate_for_one()
+# def scale_image(image_file,fx,fy):
+#     image = cv2.imread(image_file)
+#     image2 = cv2.resize(image,None,fx=fx, fy=fy, interpolation = cv2.INTER_CUBIC)
+#     cv2.imwrite("augmented.jpg", image2)
+#     # cv2.imwrite("augmented_image_part4" + "/C_scale-" + str(fx)+ "_" +str(fy) + ".jpg", image2)
+#     return test_evaluate_for_one()
 
 
 def test_evaluate():
     
-    
-    src='images/'+test_currentLetter+'.jpg'
-    scores = []
-    cnt = 0
-    for i in np.arange(-5, 5, 0.5):
-        scores.append(rotate_image(src,i))
-        # print(str(scores[len(scores) - 1]))
-        cnt = cnt+1
-        print("rotation",i,cnt,str(scores[len(scores) - 1]))
+    test_evaluate_for_one()
+    # src='images/'+test_currentLetter+'.jpg'
+    # scores = []
+    # cnt = 0
+    # for i in np.arange(-5, 5, 0.5):
+    #     scores.append(rotate_image(src,i))
+    #     # print(str(scores[len(scores) - 1]))
+    #     cnt = cnt+1
+    #     print("rotation",i,cnt,str(scores[len(scores) - 1]))
 
-    for i in np.arange(0.1, 2, 0.5):
-        for j in np.arange(0.1, 2, 0.5):
-            scores.append(scale_image(src,i,j))
-            # print(str(scores[len(scores) - 1]))
-            cnt = cnt+1
-            print("scale",i,j,cnt,str(scores[len(scores) - 1]))
+    # for i in np.arange(0.1, 2, 0.5):
+    #     for j in np.arange(0.1, 2, 0.5):
+    #         scores.append(scale_image(src,i,j))
+    #         # print(str(scores[len(scores) - 1]))
+    #         cnt = cnt+1
+    #         print("scale",i,j,cnt,str(scores[len(scores) - 1]))
 
-    for i in range(0, 10, 1):
-        scores.append(erosion_image(src,i))
-        # print(str(scores[len(scores) - 1]))
-        cnt = cnt+1
-        print("erote",i,cnt,str(scores[len(scores) - 1]))
+    # for i in range(0, 10, 1):
+    #     scores.append(erosion_image(src,i))
+    #     # print(str(scores[len(scores) - 1]))
+    #     cnt = cnt+1
+    #     print("erote",i,cnt,str(scores[len(scores) - 1]))
 
-    for i in range(0, 10, 1):
-        scores.append(dilation_image(src,i))
-        # print(str(scores[len(scores) - 1]))
-        cnt = cnt+1
-        print("dialate",i,cnt,str(scores[len(scores) - 1]))
+    # for i in range(0, 10, 1):
+    #     scores.append(dilation_image(src,i))
+    #     # print(str(scores[len(scores) - 1]))
+    #     cnt = cnt+1
+    #     print("dialate",i,cnt,str(scores[len(scores) - 1]))
 
-    text = 'Similarity is '+str(max(scores))
-    command=text
-    print(command)
-    new_time = current_time()
-    if should_speak:
-        currentTime = new_time
-        say = True
-        t1= threading.Thread(target=voiceGuide, name='t1')
-        t1.start()
+    # text = 'Similarity is '+str(max(scores))
+    # command=text
+    # print(command)
+    # new_time = current_time()
+    # if should_speak:
+    #     currentTime = new_time
+    #     say = True
+    #     t1= threading.Thread(target=voiceGuide, name='t1')
+    #     t1.start()
 
 def test_slope(x,px,y,py):
     return (y-py)/(x-px)
@@ -1096,7 +1247,7 @@ def clear():
 # voiceGuide _____________________________________________
 
 def voiceGuide():
-    return 
+    #return 
     global say
     global command
     global timeTracker
