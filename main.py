@@ -145,7 +145,7 @@ def init():
 
 # practice.py
 
-practice_currentLetter='A'
+practice_currentLetter='capA'
 practice_dotSize = 5
 practice_threshold = 13
 practice_index = 0
@@ -164,7 +164,7 @@ practice_stepsCrossed = 0
 practice_angleThresh = 20
 say=False
 command='Let\'s Start'
-practice_letterChoiceV='A'
+practice_letterChoiceV='capA'
 practice_fontsizeV = 1
 
 
@@ -372,13 +372,13 @@ def practice_getSizeV():
 create_txtfld = Entry()
 create_stroke_fld = Entry()
 
-create_currentLetter='A'
+create_currentLetter='capA'
 create_dotSize = 2
 create_threshold = 20 
 create_letterri = []
 create_index = 0
 create_letter = []
-create_making = "A"
+create_making = "capA"
 create_maxX = -1
 create_maxY = -1
 create_minX = 10000
@@ -406,10 +406,11 @@ def create_getLetter():
         return
     print("here "+newLetter)
     create_making = newLetter.strip()
-    if create_making[0] <= 'Z' and create_making[0] >= 'A':
-        create_making = "cap"+create_making
-    else:
-        create_making = "SML"+create_making
+    if len(create_making)==1:
+        if create_making[0] <= 'Z' and create_making[0] >= 'A':
+            create_making = "cap"+create_making
+        else:
+            create_making = "SML"+create_making
 
     print(create_making)
 
@@ -666,7 +667,7 @@ def create_saveLetter():
 
 # test.py
 
-test_currentLetter='A'
+test_currentLetter='capA'
 test_dotSize = 2
 test_threshold = 20 
 test_letterri = []
@@ -736,66 +737,74 @@ def test_getDataV(test_newLetter):
 
 
 
-def test_evaluate_for_one():
-    global command,say,test_currentLetter,currentTime
+# def test_evaluate_for_one():
+#     global command,say,test_currentLetter,currentTime
 
-    # print("coming soon!!!")
-    x, y = background.winfo_rootx()+122, background.winfo_rooty()
-    w, h = background.winfo_width()-130, background.winfo_height()-77
-    pyautogui.screenshot('screenshot.jpg', region=(x, y, w, h))
-    image = Image.open('screenshot.jpg')
-    inverted_image = PIL.ImageOps.invert(image)
-    inverted_image.save('screenshot.jpg')
+#     print("coming soon!!!")
+#     x, y = background.winfo_rootx()+122, background.winfo_rooty()
+#     w, h = background.winfo_width()-130, background.winfo_height()-77
+#     pyautogui.screenshot('screenshot.jpg', region=(x, y, w, h))
+#     image = Image.open('screenshot.jpg')
+#     inverted_image = PIL.ImageOps.invert(image)
+#     inverted_image.save('screenshot.jpg')
 
 
-    ex_crop_img = crop_contour( cv2.imread('screenshot.jpg'), True)
-    cv2.imwrite('screenshot.jpg',ex_crop_img)
+#     ex_crop_img = crop_contour( cv2.imread('screenshot.jpg'), True)
+#     cv2.imwrite('screenshot.jpg',ex_crop_img)
 
-    test_predict_with_model()
+#     test_predict_with_model()
     
-    # img_1='screenshot.jpg'
-    # img_2='augmented.jpg'
-    # # img_2='images/'+test_currentLetter+'.jpg'
+#     img_1='screenshot.jpg'
+#     img_2='augmented.jpg'
+#     #img_2='images/'+test_currentLetter+'.jpg'
 
-    # # Calculations for image 1
-    # img_1 = Image.open(img_1).convert('L').resize(IMAGE_SHAPE) # Resizing the image to required size
-    # # img_1.save('img_1.jpg')
-    # img_1 = np.stack((img_1,)*3, axis=-1) # Converting the image into a color representation for each pixel
-    # img_1 = np.array(img_1)/255.0 # Normalizing the values between 0 and 1
-    # embedding_img1 = model.predict(img_1[np.newaxis, ...]) # Extracting the features
-    # embedding_img1_np = np.array(embedding_img1) # Converting to numpy array
-    # flattened_feature_img1 = embedding_img1_np.flatten() # Converting matrix to a vector
+#     # Calculations for image 1
+#     img_1 = Image.open(img_1).convert('L').resize(IMAGE_SHAPE) # Resizing the image to required size
+#     # img_1.save('img_1.jpg')
+#     img_1 = np.stack((img_1,)*3, axis=-1) # Converting the image into a color representation for each pixel
+#     img_1 = np.array(img_1)/255.0 # Normalizing the values between 0 and 1
 
-    # # Calculations for image 2
-    # img_2 = Image.open(img_2).convert('L').resize(IMAGE_SHAPE) # Resizing the image to required size
-    # # img_2.save('img_2.jpg')
-    # img_2 = np.stack((img_2,)*3, axis=-1) # Converting the image into a color representation for each pixel
-    # img_2 = np.array(img_2)/255.0 # Normalizing the values between 0 and 1
-    # embedding_img2 = model.predict(img_2[np.newaxis, ...]) # Extracting the features
-    # embedding_img2_np = np.array(embedding_img2) # Converting to numpy array
-    # flattened_feature_img2 = embedding_img2_np.flatten() # Converting matrix to a vector
+#     # Average Blur
+#     img_1 = cv2.blur(img_1,(3,3))
 
-    # methods = ['sqeuclidean', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
-    #     'dice', 'euclidean', 'hamming', 'jaccard', 'jensenshannon', 'kulsinski',
-    #     'matching', 'minkowski', 'rogerstanimoto', 'russellrao',
-    #     'sokalmichener', 'sokalsneath', 'braycurtis', 'yule']
+#     embedding_img1 = model.predict(img_1[np.newaxis, ...]) # Extracting the features
+#     embedding_img1_np = np.array(embedding_img1) # Converting to numpy array
+#     flattened_feature_img1 = embedding_img1_np.flatten() # Converting matrix to a vector
 
-    # mins = [0,0,0,0,0,0,0,0,0,0,0,0.475,0,0,0,0.475,0,0,0,0]
-    # maxes = [150,450, 2.5, 200, .5, .4, .4, 13, .6, 1, 0.5, 1, .6, 13, .4, .8, .5, .7, .5, .3]
-    # scores = []
+#     # Calculations for image 2
+#     img_2 = Image.open(img_2).convert('L').resize(IMAGE_SHAPE) # Resizing the image to required size
+#     # img_2.save('img_2.jpg')
+#     img_2 = np.stack((img_2,)*3, axis=-1) # Converting the image into a color representation for each pixel
+#     img_2 = np.array(img_2)/255.0 # Normalizing the values between 0 and 1
 
-    # for i, m in enumerate(methods):
+#     # Average Blur
+#     img_2 = cv2.blur(img_2,(3,3))
 
-    #     metric = m # Try using any one of the methods listed above if needed
-    #     dist_boyboy = distance.cdist([flattened_feature_img1], [flattened_feature_img2],metric)[0]      # Finding similarity 
+#     embedding_img2 = model.predict(img_2[np.newaxis, ...]) # Extracting the features
+#     embedding_img2_np = np.array(embedding_img2) # Converting to numpy array
+#     flattened_feature_img2 = embedding_img2_np.flatten() # Converting matrix to a vector
 
-    #     score = max(0, maxes[i] - dist_boyboy[0])
-    #     #print(score)
-    #     interval = maxes[i] - mins[i]
-    #     score = score / interval * 100
-    #     scores.append(score)
+#     methods = ['sqeuclidean', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine',
+#         'dice', 'euclidean', 'hamming', 'jaccard', 'jensenshannon', 'kulsinski',
+#         'matching', 'minkowski', 'rogerstanimoto', 'russellrao',
+#         'sokalmichener', 'sokalsneath', 'braycurtis', 'yule']
 
-    # return max(scores)
+#     mins = [0,0,0,0,0,0,0,0,0,0,0,0.475,0,0,0,0.475,0,0,0,0]
+#     maxes = [150,450, 2.5, 200, .5, .4, .4, 13, .6, 1, 0.5, 1, .6, 13, .4, .8, .5, .7, .5, .3]
+#     scores = []
+
+#     for i, m in enumerate(methods):
+
+#         metric = m # Try using any one of the methods listed above if needed
+#         dist_boyboy = distance.cdist([flattened_feature_img1], [flattened_feature_img2],metric)[0]      # Finding similarity 
+
+#         score = max(0, maxes[i] - dist_boyboy[0])
+#         #print(score)
+#         interval = maxes[i] - mins[i]
+#         score = score / interval * 100
+#         scores.append(score)
+
+#     return max(scores)
 
 # def erosion_image(image_file,shift):
 #     image = cv2.imread(image_file)
@@ -831,10 +840,29 @@ def test_evaluate_for_one():
 
 
 def test_evaluate():
-    
-    test_evaluate_for_one()
+
+    global currentTime,say,command,text
+
+    x, y = background.winfo_rootx()+122, background.winfo_rooty()
+    w, h = background.winfo_width()-130, background.winfo_height()-77
+    pyautogui.screenshot('screenshot.jpg', region=(x, y, w, h))
+    image = Image.open('screenshot.jpg')
+    inverted_image = PIL.ImageOps.invert(image)
+    inverted_image.save('screenshot.jpg')
+
+
+    ex_crop_img = crop_contour( cv2.imread('screenshot.jpg'), True)
+    cv2.imwrite('screenshot.jpg',ex_crop_img)
+
+    test_predict_with_model()
+
     # src='images/'+test_currentLetter+'.jpg'
+    # standard_img=cv2.imread('images/'+test_currentLetter+'.jpg')
+    # cv2.imwrite('augmented.jpg',standard_img)
+
     # scores = []
+    # scores.append(test_evaluate_for_one())
+    # print("standard",str(scores[len(scores) - 1]))
     # cnt = 0
     # for i in np.arange(-5, 5, 0.5):
     #     scores.append(rotate_image(src,i))
@@ -861,7 +889,7 @@ def test_evaluate():
     #     cnt = cnt+1
     #     print("dialate",i,cnt,str(scores[len(scores) - 1]))
 
-    # text = 'Similarity is '+str(max(scores))
+    # text = 'Similarity is '+str(round(max(scores),2))+' %'
     # command=text
     # print(command)
     # new_time = current_time()
