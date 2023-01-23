@@ -389,13 +389,14 @@ create_minY = 10000
 
 
 def create_clearCanvas():
-    global create_maxX,create_maxY,create_minX,create_minY,wn
+    global create_maxX,create_maxY,create_minX,create_minY,wn,create_letter
     create_maxX = -1
     create_maxY = -1
     create_minX = 10000
     create_minY = 10000
     wn.delete('paint')
     wn.delete('follow')
+    create_letter.clear()
 
 def create_getLetter():
     global create_txtfld
@@ -638,7 +639,7 @@ def create_saveLetter():
                 x1, y1 = (point[0]-5), (point[1]-5)
                 x2, y2 = (point[0]+5), (point[1]+5)
                 wn.create_oval(x1, y1, x2, y2, fill=color, outline=color,tags='strokes')
-        
+        print("found stroke")
         f.write("\n")
         # input("Press Enter to continue...")
 
