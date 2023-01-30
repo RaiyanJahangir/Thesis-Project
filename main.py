@@ -20,17 +20,27 @@ import os
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 import pickle
+from gtts import gTTS
+from playsound import playsound
+from timeit import default_timer as timer
+from pygame import mixer
+import time
+
 
 previous_tick = datetime.now()
+previous_ticks = timer()
 should_speak = True
+current_language = "bangla"
+mp3_file = ""
+voice_thesh = 2
 
 def justify_voice():
-    global previous_tick,should_speak
+    global previous_tick,should_speak,voice_thesh
     current_tick = datetime.now()
     elapsed = current_tick-previous_tick
     elapsed_s = elapsed.total_seconds()
     # print(elapsed.total_seconds())
-    if float(elapsed_s) >= 0.001:
+    if float(elapsed_s) >= voice_thesh:
         should_speak = True
     else:
         should_speak = False
@@ -47,11 +57,11 @@ currentTime = current_time()
 timeTracker = {currentTime:False}
 
 
-model_url = "https://tfhub.dev/tensorflow/efficientnet/lite0/feature-vector/2" # Link to model weights 
-IMAGE_SHAPE = (224, 224)
+# model_url = "https://tfhub.dev/tensorflow/efficientnet/lite0/feature-vector/2" # Link to model weights 
+# IMAGE_SHAPE = (224, 224)
 
-layer = hub.KerasLayer(model_url, input_shape=IMAGE_SHAPE+(3,)) # Loading model weights
-model = tf.keras.Sequential([layer]) # Building model object using loaded weights
+# layer = hub.KerasLayer(model_url, input_shape=IMAGE_SHAPE+(3,)) # Loading model weights
+# model = tf.keras.Sequential([layer]) # Building model object using loaded weights
 
 
 recognize=sr.Recognizer()
@@ -178,7 +188,7 @@ def practice_makeDataset():
     global practice_index,practice_strokePointIndex,practice_strokeIndex
     global practice_started
     global practice_threshold
-    global practice_dotSize,command,say
+    global practice_dotSize,command,say,mp3_file
     wn.delete('all')
     practice_index = 0
     practice_strokePointIndex = 0
@@ -221,27 +231,37 @@ def practice_correctionMSGpoint(x,y,tx,ty):
     y2=y1+practice_threshold+5
     # print(" x1 = ",x1," y1 = ",y1," x2 = ",x2," y2 = ",y2," tx = ",tx," ty = ",ty)
     text = ""
-    global command
+    global command,mp3_file
     global say
     if x2 < tx and y2 < ty:
         text = "Go Down Right"
+        mp3_file = "voice_folder/go_down_right.mp3"
     elif x1 > tx and y2 < ty:
         text = "Go Down Left"
+        mp3_file = "voice_folder/go_down_left.mp3"
     elif x2 < tx and y1 > ty:
         text = "Go Up Right"
+        mp3_file = "voice_folder/go_up_right.mp3"
     elif x1 > tx and y1 > ty:
         text = "Go Up Left"
+        mp3_file = "voice_folder/go_up_left.mp3"
     elif y2 < ty and x1<=tx and x2>tx:
         text = "Go Down"
+        mp3_file = "voice_folder/go_down.mp3"
     elif y1 > ty and x1<=tx and x2>tx:
         text = "Go Up"
+        mp3_file = "voice_folder/go_up.mp3"
     elif x2 < tx and y1<=ty and y2>ty:
         text = "Go Right"
+        mp3_file = "voice_folder/go_right.mp3"
     elif x1 > tx and y1<=ty and y2>ty:
         text = "Go Left"
+        mp3_file = "voice_folder/go_left.mp3"
     
     if len(text) == 0:
         text = "keep on going"
+        mp3_file = "voice_folder/keep_going.mp3"
+        
     new_time = current_time()
     if should_speak:
         currentTime = new_time
@@ -250,7 +270,7 @@ def practice_correctionMSGpoint(x,y,tx,ty):
 
 
 def practice_responseNext(x,y,tx,ty):
-    global currentTime
+    global currentTime,mp3_file
     x1,y1,ovalStartx1,ovalStarty1 = x,y,tx,ty
     ovalEndx1,ovalEndy1 = tx,ty
     x2=x1+practice_threshold  # practice_threshold has been determined after experimentation
@@ -261,23 +281,32 @@ def practice_responseNext(x,y,tx,ty):
     global say
     if x2 < tx and y2 < ty:
         text = "Go Down Right"
+        mp3_file = "voice_folder/go_down_right.mp3"
     elif x1 > tx and y2 < ty:
         text = "Go Down Left"
+        mp3_file = "voice_folder/go_down_left.mp3"
     elif x2 < tx and y1 > ty:
         text = "Go Up Right"
+        mp3_file = "voice_folder/go_up_right.mp3"
     elif x1 > tx and y1 > ty:
         text = "Go Up Left"
+        mp3_file = "voice_folder/go_up_left.mp3"
     elif y2 < ty and x1<=tx and x2>tx:
         text = "Go Down"
+        mp3_file = "voice_folder/go_down.mp3"
     elif y1 > ty and x1<=tx and x2>tx:
         text = "Go Up"
+        mp3_file = "voice_folder/go_up.mp3"
     elif x2 < tx and y1<=ty and y2>ty:
         text = "Go Right"
+        mp3_file = "voice_folder/go_right.mp3"
     elif x1 > tx and y1<=ty and y2>ty:
         text = "Go Left"
+        mp3_file = "voice_folder/go_left.mp3"
     
     if len(text) == 0:
         text = "keep on going"
+        mp3_file = "voice_folder/keep_going.mp3"
     
     new_time = current_time()
     if should_speak:
@@ -290,7 +319,7 @@ def practice_responseNext(x,y,tx,ty):
 def practice_getData(event):
     global letterChoice
     global practice_currentLetter
-    global command,say,currentTime
+    global command,say,currentTime,mp3_file
     
     
     newLetter = letterChoice.get()
@@ -298,6 +327,7 @@ def practice_getData(event):
         practice_currentLetter = newLetter
         practice_makeDataset()
         command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
+        mp3_file = "voice_folder/selection.mp3"
         
         new_time = current_time()
         if should_speak:
@@ -312,7 +342,7 @@ def practice_getSize(event):
     global currentTime
     global practice_dataset
     global fontsizeC
-    global practice_CurrentSizeD,command,say
+    global practice_CurrentSizeD,command,say,mp3_file
     data = fontsizeC.current()
     divisors = [4,2,(4/3),1,0.8,(2/3),(4/7)]
     newSizeD = divisors[data]
@@ -321,6 +351,7 @@ def practice_getSize(event):
         practice_CurrentSizeD = newSizeD
         practice_makeDataset()
         command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
+        mp3_file = "voice_folder/selection.mp3"
         new_time = current_time()
         if should_speak:
             currentTime = new_time
@@ -330,7 +361,7 @@ def practice_getSize(event):
 
 def practice_getDataV():
     global practice_letterChoiceV
-    global practice_currentLetter,command,say,currentTime
+    global practice_currentLetter,command,say,currentTime,mp3_file
     
     
     newLetter = practice_letterChoiceV
@@ -338,6 +369,7 @@ def practice_getDataV():
         practice_currentLetter = newLetter
         practice_makeDataset()
         command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
+        mp3_file = "voice_folder/selection.mp3"
         new_time = current_time()
         if should_speak:
             currentTime = new_time
@@ -348,7 +380,7 @@ def practice_getDataV():
 def practice_getSizeV():
     global practice_dataset
     global practice_fontsizeV,currentTime
-    global practice_CurrentSizeD,command,say
+    global practice_CurrentSizeD,command,say,mp3_file
     data = practice_fontsizeV
     divisors = [4,2,(4/3),1,0.8,(2/3),(4/7)]
     newSizeD = divisors[data]
@@ -357,6 +389,7 @@ def practice_getSizeV():
         practice_CurrentSizeD = newSizeD
         practice_makeDataset()
         command = "letter chosen "+str(practice_currentLetter)+" font size selected "+str(practice_CurrentSizeD)
+        mp3_file = "voice_folder/selection.mp3"
         new_time = current_time()
         if should_speak:
             currentTime = new_time
@@ -414,12 +447,6 @@ def create_getLetter():
             create_making = "SML"+create_making
 
     print(create_making)
-
-def create_getLetter_stoke_name():
-    
-    
-    pass
-
 
 
 def create_erosion_image(image_file,shift):
@@ -701,7 +728,7 @@ def test_predict_with_model():
 
 def test_getData(event):
     global test_currentLetter,test_prev_x
-    global letterChoice,command,say,test_prev_y,currentTime
+    global letterChoice,command,say,test_prev_y,currentTime,mp3_file
     test_newLetter = letterChoice.get()
     
     if test_newLetter != test_currentLetter:
@@ -709,6 +736,7 @@ def test_getData(event):
         wn.delete('all')
         print(test_currentLetter)
         command = "letter chosen "+str(test_currentLetter)
+        mp3_file = "voice_folder/selection.mp3"
         new_time = current_time()
         if should_speak:
             currentTime = new_time
@@ -719,7 +747,7 @@ def test_getData(event):
         test_prev_y = -1
 
 def test_getDataV(test_newLetter):
-    global test_currentLetter,command,say,currentTime
+    global test_currentLetter,command,say,currentTime,mp3_file
     global test_prev_x 
     global test_prev_y 
     if test_newLetter != test_currentLetter:
@@ -727,6 +755,7 @@ def test_getDataV(test_newLetter):
         wn.delete('all')
         print(test_currentLetter)
         command = "letter chosen "+str(test_currentLetter)
+        mp3_file = "voice_folder/selection.mp3"
         new_time = current_time()
         if should_speak:
             currentTime = new_time
@@ -842,7 +871,7 @@ def test_getDataV(test_newLetter):
 
 def test_evaluate():
 
-    global currentTime,say,command,text
+    global currentTime,say,command,text,mp3_file
 
     x, y = background.winfo_rootx()+122, background.winfo_rooty()
     w, h = background.winfo_width()-130, background.winfo_height()-77
@@ -891,6 +920,7 @@ def test_evaluate():
     #     print("dialate",i,cnt,str(scores[len(scores) - 1]))
 
     # text = 'Similarity is '+str(round(max(scores),2))+' %'
+    # mp3_file = "voice_folder/coming_soon.mp3"
     # command=text
     # print(command)
     # new_time = current_time()
@@ -938,10 +968,11 @@ def paintP(event):
     global practice_initX,practice_initY,practice_nStepAgo
     global practice_started
     global practice_dataset
-    global command
+    global command,mp3_file
     global say,currentTime
     if practice_index == len(practice_letter):
         command='Done'
+        mp3_file = "voice_folder/done.mp3"
         new_time = current_time()
         if should_speak:
             currentTime = new_time
@@ -970,6 +1001,7 @@ def paintP(event):
             if xc>screen_width-130:
                 print("too much on right side, go left")
                 command = "too much on right side, go left"
+                mp3_file = "voice_folder/init_left.mp3"
                 new_time = current_time()
                 if should_speak:
                     currentTime = new_time
@@ -981,6 +1013,7 @@ def paintP(event):
             if xc<10 :
                 print("too much on left side, go right")
                 command = "too much on left side, go right"
+                mp3_file = "voice_folder/init_right.mp3"
                 new_time = current_time()
                 if should_speak:
                     currentTime = new_time
@@ -992,6 +1025,7 @@ def paintP(event):
             if yc<10 :
                 print("too much on upperside, go down")
                 command = "too much on upperside, go down"
+                mp3_file = "voice_folder/init_down.mp3"
                 new_time = current_time()
                 if should_speak:
                     currentTime = new_time
@@ -1003,6 +1037,7 @@ def paintP(event):
             if yc>screen_height-10 :
                 print("too much on bottom side, go up")
                 command = "too much on bottom side, go up"
+                mp3_file = "voice_folder/init_up.mp3"
                 new_time = current_time()
                 if should_speak:
                     currentTime = new_time
@@ -1107,13 +1142,32 @@ def paintT(event):
 
 background=Canvas(root, width=screen_width, height=screen_height, bg='#eeeeee')
 
+
+def selectLanguageBangla():
+    global current_language,banglaSelect,englishSelect
+    current_language = "bangla"
+    banglaSelect['background'] = 'white'
+    banglaSelect['foreground'] = 'black'
+    englishSelect['background'] = 'brown'
+    englishSelect['foreground'] = 'white'
+
+def selectLanguageEnglish():
+    global current_language,englishSelect,banglaSelect
+    current_language = "english"
+    englishSelect['background'] = 'white'
+    englishSelect['foreground'] = 'black'
+    banglaSelect['background'] = 'brown'
+    banglaSelect['foreground'] = 'white'
+
+
 def gotoHome():
     global session
     global background,currentTime
-    global create_txtfld,command,say
+    global create_txtfld,command,say,mp3_file
     session = 'Home'
     init()
     command = 'Home ready'
+    mp3_file = "voice_folder/home_ready.mp3"
     new_time = current_time()
     if should_speak:
         currentTime = new_time
@@ -1124,10 +1178,10 @@ def gotoHome():
     wn.delete('follow')
     home_btn['background'] = 'white'
     home_btn['foreground'] = 'black'
-
+    
 
 def gotoPractice():
-    global session,command,say
+    global session,command,say,mp3_file
     global letterChoice
     global fontsizeC
     global select_letter
@@ -1136,6 +1190,10 @@ def gotoPractice():
     init()
     practice_makeDataset()
     command = 'Practice ready'
+    mp3_file = "voice_folder/practice_ready.mp3"
+    # command=কবো নাকো বদ্ধ ঘরে"
+
+    
     new_time = current_time()
     if should_speak:
         currentTime = new_time
@@ -1177,7 +1235,7 @@ def gotoPractice():
 
 
 def gotoTest():
-    global session,command,say,currentTime
+    global session,command,say,currentTime,mp3_file
     global letterChoice
     global select_letter,test_prev_x,test_prev_y
     session = 'Test'
@@ -1186,6 +1244,7 @@ def gotoTest():
     wn.delete('paint')
     wn.delete('follow')
     command = 'Test ready'
+    mp3_file = "voice_folder/test_ready.mp3"
     new_time = current_time()
     if should_speak:
         currentTime = new_time
@@ -1212,7 +1271,7 @@ def gotoTest():
     background.create_window(60, 450,window=Button(root,text='Evaluate', command=test_evaluate, bg='brown', fg='white', font=('helvetica', 12, 'bold')),tags = 'test_button_evaluate')
 
 def gotoCreate():
-    global select_letter,command,say
+    global select_letter,command,say,mp3_file
     global create_txtfld
     global session
     global background,currentTime
@@ -1221,6 +1280,7 @@ def gotoCreate():
     init()
     create_clearCanvas()
     command = 'create ready'
+    mp3_file = "voice_folder/create_ready.mp3"
     new_time = current_time()
     if should_speak:
         currentTime = new_time
@@ -1239,7 +1299,7 @@ def gotoCreate():
 
 
 def clear():
-    global wn,command,say,currentTime
+    global wn,command,say,currentTime,mp3_file
     if session == 'Home':
         wn.delete('paint')
         wn.delete('follow')
@@ -1251,6 +1311,7 @@ def clear():
         wn.delete('paint')
         wn.delete('follow')
     command='screen cleared'
+    mp3_file = "voice_folder/cleared.mp3"
     new_time = current_time()
     if should_speak:
         currentTime = new_time
@@ -1278,26 +1339,46 @@ def clear():
 def voiceGuide():
     #return 
     global say
-    global command
+    global command,mp3_file
     global timeTracker
+    global current_language,mp3_file,previous_ticks,voice_thesh
     lim = 1
     print("Wasif inside voiceGuide at ",currentTime)
     try:
         if(say==True):
-            print(command," ________entered here",currentTime)
+            curTime = timer()
+            print("cur=",curTime," prev=",previous_ticks," elapsed = ",curTime-previous_ticks)
+            if(curTime-previous_ticks) < voice_thesh:
+                print("passing ",curTime," ",previous_ticks)
+                pass
+            previous_ticks = curTime
+            if current_language == "english" :
+                print(command," ________entered here",currentTime)
+                if currentTime in timeTracker.keys():
+                    return 
+                print('Saying....')
+                # Initialize the engine
+                engine = pyttsx3.init()
+                voices = engine.getProperty('voices')
+                # voiceFemales = filter(lambda v: v.gender == 'VoiceGenderFemale', voices)
+                engine.setProperty('voice', voices[0].id)
+                engine.say(command)
+                engine.runAndWait()
+                
+            else:
+                # print("the mp3 file is")
+                # print(mp3_file)
+                # playsound(mp3_file)
 
-            if currentTime in timeTracker.keys():
-                return 
-            print('Saying....')
-            # Initialize the engine
-            engine = pyttsx3.init()
-            voices = engine.getProperty('voices')
-            # voiceFemales = filter(lambda v: v.gender == 'VoiceGenderFemale', voices)
-            engine.setProperty('voice', voices[0].id)
-            engine.say(command)
-            engine.runAndWait()
+                mixer.init()
+                mixer.music.load(mp3_file)
+                mixer.music.play()
+                while mixer.music.get_busy():  # wait for music to finish playing
+                    time.sleep(1)
+
             say=False
             timeTracker[currentTime] = True
+            
     except:
         say=False
         return 
@@ -1406,6 +1487,8 @@ practice_btn = Button(root,text='Practice', command=gotoPractice, bg='Brown', fg
 test_btn = Button(root,text='Test', command=gotoTest, bg='brown', fg='white', font=('helvetica', 12, 'bold'))
 create_btn = Button(root,text='Create', command=gotoCreate, bg='brown', fg='white', font=('helvetica', 12, 'bold'))
 clear_btn = Button(root,text='clear', command=clear, bg='brown', fg='white', font=('helvetica', 12, 'bold'))
+banglaSelect = Button(root,text='Bangla', command=selectLanguageBangla, bg='white', fg='black', font=('helvetica', 12, 'bold'))
+englishSelect = Button(root,text='English', command=selectLanguageEnglish, bg='brown', fg='white', font=('helvetica', 12, 'bold'))
 
 
 background.create_window(60,  50,height = 40,width = 100,window=home_btn)
@@ -1413,6 +1496,8 @@ background.create_window(60, 120,height = 40,width = 100,window=practice_btn)
 background.create_window(60, 190,height = 40,width = 100,window=test_btn)
 background.create_window(60, 260,height = 40,width = 100,window=create_btn)
 background.create_window(60, 330,height = 40,width = 100,window=clear_btn)
+background.create_window(60, 900,height = 40,width = 100,window=banglaSelect)
+background.create_window(60, 950,height = 40,width = 100,window=englishSelect)
 
 
 
