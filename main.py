@@ -126,16 +126,18 @@ def init():
     global fontsizeC
     global letterChoice
     global select_letter
-    global select_fontsize,test_prev_x,test_prev_y
+    global select_fontsize,test_prev_x,test_prev_y,create_stroke_fld
     test_prev_x = -1
     test_prev_y = -1
     create_txtfld.destroy()
+    create_stroke_fld.destroy()
     fontsizeC.destroy()
     letterChoice.destroy()
     select_letter.destroy()
     select_fontsize.destroy()
     background.delete('create_ok')
     background.delete('create_save')
+    background.delete('create_enter')
     background.delete('test_button_evaluate')
 
     create_btn['background'] = 'brown'
@@ -528,12 +530,16 @@ def create_ML_Model():
     pick.close()
 
 
+strklist = []
+temps = []
+
 
 
 def create_saveLetter():
     global create_maxX,create_maxY,create_minX,create_minY
     global create_letter,stc,wn
     global background
+    global strklist,temps
     if len(create_letter) == 0:
         return 
     # if create_minY < 120 or create_maxY > 480:
@@ -626,7 +632,7 @@ def create_saveLetter():
 
     
     # Machine Learning --------------------
-    create_ML_Model()
+    # create_ML_Model()
     
     
     # add = 0
@@ -655,24 +661,29 @@ def create_saveLetter():
     filename = "letters/"+create_making+".txt"
     print("_________________________"+filename)
     f = open(filename, "w")
-
+    strklist = []
     for letters in stroke:
         # print(letters)
-            
+        temps = []
         for point in letters:
             f.write(str(point[0])+" "+str(point[1])+" ")
-            if stc and False:
-                color="blue"
-                x1, y1 = (point[0]-5), (point[1]-5)
-                x2, y2 = (point[0]+5), (point[1]+5)
-                wn.create_oval(x1, y1, x2, y2, fill=color, outline=color,tags='strokes')
+            if stc:
+                temps.append(point)
+                print("dc")
+                # color="blue"
+                # x1, y1 = (point[0]-5), (point[1]-5)
+                # x2, y2 = (point[0]+5), (point[1]+5)
+                # wn.create_oval(x1, y1, x2, y2, fill=color, outline=color,tags='strokes')
         print("found stroke")
         f.write("\n")
         # input("Press Enter to continue...")
+        strklist.append(temps)
+        print(strklist)
+        
 
         
-        # wn.delete('strokes')
-        # stc = True
+        wn.delete('strokes')
+        stc = True
 
     f.close()
     print("file saved")
@@ -688,6 +699,26 @@ def create_saveLetter():
     #         wn.create_oval(i, j, i+1, j+1, fill=gcl, outline=gcl,tags='guideline')
 
     create_clearCanvas()
+
+
+    # for letters in strklist:
+    #     print(letters)
+    #     for point in letters:
+    #         print("point = ",point)
+    #         color="blue"
+    #         x1, y1 = (point[0]-5), (point[1]-5)
+    #         x2, y2 = (point[0]+5), (point[1]+5)
+    #         wn.create_oval(x1, y1, x2, y2, fill=color, outline=color,tags='strokes')
+        # k = int(input("Press Enter to continue..."))
+
+        # if lim == 1:
+        #     break
+        # lim = lim+1
+        # wn.delete('strokes')
+        # time.sleep(10)
+        
+
+
 
 
 
@@ -1094,7 +1125,7 @@ def paintP(event):
         print(text)
         command=text
         new_time = current_time()
-        if should_speak:
+        if should_speak or True:
             currentTime = new_time
             say = True
             t1= threading.Thread(target=voiceGuide, name='t1')
@@ -1296,6 +1327,9 @@ def gotoCreate():
     create_txtfld.place(x=5, y=390)
     background.create_window(105, 400,window=Button(root,text='ok', command=create_getLetter, bg='white', fg='black', font=('helvetica', 7, 'bold')),tags='create_ok')
     background.create_window(60, 460,window=Button(root,text='Save', command=create_saveLetter, bg='brown', fg='white', font=('helvetica', 12, 'bold')),tags ='create_save')
+    create_stroke_fld=Entry(background,width = 10)
+    create_stroke_fld.place(x=5, y=520)
+    background.create_window(60, 580,window=Button(root,text='Enter', command=create_saveLetter, bg='brown', fg='white', font=('helvetica', 12, 'bold')),tags ='create_enter')
 
 
 def clear():
