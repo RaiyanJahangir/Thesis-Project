@@ -262,9 +262,11 @@ def practice_correctionMSGpoint(x,y,tx,ty):
         text = "keep on going"
         mp3_file = "voice_folder/keep_going.mp3"
         
-    new_time = current_time()
-    if should_speak:
-        currentTime = new_time
+    # new_time = current_time()
+    # if should_speak:
+    #     command=text
+    #     say=True
+    #     currentTime = new_time
     return text
 
 
@@ -308,10 +310,11 @@ def practice_responseNext(x,y,tx,ty):
         text = "keep on going"
         mp3_file = "voice_folder/keep_going.mp3"
     
-    new_time = current_time()
-    if should_speak:
-        currentTime = new_time
-        say = True
+    # new_time = current_time()
+    # if should_speak:
+    #     command=text
+    #     currentTime = new_time
+    #     say = True
     return text
 
 
