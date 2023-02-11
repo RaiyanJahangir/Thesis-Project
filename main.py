@@ -707,7 +707,7 @@ test_prev_x = -1
 test_prev_y = -1
 
 def test_predict_with_model():
-
+    global currentTime,say,command,text
     catagories = os.listdir('image_dataset/')
     path, dirs, files = next(os.walk("image_dataset/"))
 
@@ -726,6 +726,17 @@ def test_predict_with_model():
     prediction = model.predict([image])
     print("Prediction:",prediction)
     print("prediction :",catagories[prediction[0]])
+
+    text = 'The letter is like '+str(catagories[prediction[0]])
+    mp3_file = "voice_folder/coming_soon.mp3"
+    command=text
+    print(command)
+    new_time = current_time()
+    if should_speak:
+        currentTime = new_time
+        say = True
+        t1= threading.Thread(target=voiceGuide, name='t1')
+        t1.start()
 
 
 
